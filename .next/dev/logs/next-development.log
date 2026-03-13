@@ -1,0 +1,20 @@
+[00:00:00.419] Server  LOG     ✓ Ready in 276ms
+[00:01:26.928] Server  ERROR   ⨯ ReferenceError: Filter is not defined
+[00:01:27.062] Server  WARN    ⚠ Cross origin request detected from 192.168.40.42 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:01:27.078] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:27.208] Browser ERROR   uncaughtError: ReferenceError: Filter is not defined
+[00:19:41.070] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.071] Server  ERROR   ⨯ "unhandledRejection:" Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.073] Server  ERROR   ⨯ "unhandledRejection: " Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.094] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.096] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.101] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.102] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.104] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.105] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.107] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.107] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.129] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.129] Server  ERROR   Error: ENOENT: no such file or directory, scandir '/Users/daniellindsay/Desktop/dev-by-gitwork/app'
+[00:19:41.161] Server  LOG     ✓ Compiled in 79ms
