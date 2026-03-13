@@ -1,6 +1,6 @@
 {
-  "name": "dev-by-gitwork-marketplace",
-  "version": "0.2.0",
+  "name": "dev-by-gitwork-ai-marketplace",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Dev by Gitwork",
-  description: "Hire vetted developers by stack, availability, and cost.",
+  description: "Tell us what you want to build and get matched with developers.",
 };
 
 export default function RootLayout({ children }) {

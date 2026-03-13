@@ -1,6 +1,6 @@
-# Dev by Gitwork Marketplace
+# Dev by Gitwork AI Marketplace
 
-A clean marketplace starter for hiring developers by stack, availability, and cost.
+AI-first marketplace for matching clients to developers by natural language brief, stack, availability, and cost.
 
 ## Run locally
 
@@ -15,11 +15,3 @@ npm run dev
 npm run build
 npm run start
 ```
-
-## Notes
-
-- Built with Next.js App Router
-- Light neutral design language
-- Search and filter toolbar
-- Developer profile modal
-- Bookings, supply, and admin views
