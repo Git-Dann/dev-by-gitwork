@@ -291,6 +291,7 @@ function PromptIdeaCard({ label, description, prompt, onSelect }) {
 function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
   const stackSignal = liveParsed.matchedStacks.length ? liveParsed.matchedStacks.join(" + ") : "Generalist stack";
   const availabilitySignal = liveParsed.availability === "Any availability" ? "Flexible start" : liveParsed.availability;
+  const promptWordCount = prompt.trim() ? prompt.trim().split(/\s+/).length : 0;
   const leadPoints = [
     { label: "Less setup", value: "Describe the product once instead of stitching filters together." },
     { label: "Live structure", value: "Stack, budget, and timing become usable signals while the brief is still being written." },
@@ -367,42 +368,37 @@ function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
         </div>
 
         <div className="mt-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="rounded-[32px] border border-white/80 bg-white/76 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-5">
-            <div className="flex flex-col gap-5">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] bg-slate-950 text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]">
-                  <BrainCircuit className="h-5 w-5" />
+          <div className="rounded-[32px] border border-white/80 bg-white/70 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="min-w-0 max-w-2xl">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Project brief</p>
+                  <h2 className="mt-3 font-[family:var(--font-sora)] text-[1.7rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2rem]">
+                    Describe the build in two or three clear sentences.
+                  </h2>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-950">Project brief</p>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                    Use a couple of natural sentences. Mention stack, timing, budget, and what kind of product you need to ship.
-                  </p>
-                </div>
+                <p className="max-w-sm text-sm leading-6 text-slate-500">
+                  Keep it simple. Stack, timeline, budget, and the kind of product you need are enough.
+                </p>
               </div>
 
-              <div className="rounded-[28px] border border-slate-200/80 bg-[#f8f7f2] p-3 sm:p-4">
-                <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="min-h-[190px] w-full bg-transparent text-[17px] leading-8 text-slate-900 outline-none transition placeholder:text-slate-400" />
-              </div>
+              <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(15,23,42,0.04)] sm:p-5">
+                <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="min-h-[210px] w-full bg-transparent text-[17px] leading-8 text-slate-900 outline-none transition placeholder:text-slate-400" />
 
-              <div className="flex flex-col gap-4 border-t border-slate-200/80 pt-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="grid gap-2 text-sm text-slate-500">
-                  <div className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />
-                    Plain-English parsing replaces manual filter setup.
+                <div className="mt-5 flex flex-col gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
+                    <span>{promptWordCount} words</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
+                    <span>Include stack, timing, and budget</span>
                   </div>
-                  <div className="inline-flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Budget and timing are scored before the shortlist renders.
-                  </div>
+
+                  <button type="button" onClick={onSubmit} className="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:bg-slate-900 sm:w-auto">
+                    <span>Find matching developers</span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition group-hover:translate-x-0.5">
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </button>
                 </div>
-
-                <button type="button" onClick={onSubmit} className="group inline-flex w-full items-center justify-between rounded-[24px] bg-slate-950 px-5 py-4 text-left text-sm font-semibold text-white shadow-[0_16px_32px_rgba(15,23,42,0.18)] transition hover:bg-slate-900 sm:w-auto sm:min-w-[280px]">
-                  <span>Find matching developers</span>
-                  <span className="ml-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition group-hover:translate-x-1">
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </button>
               </div>
             </div>
           </div>
