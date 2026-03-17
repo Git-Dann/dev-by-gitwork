@@ -150,12 +150,12 @@ function Pill({ children, tone = "default" }) {
   return <span className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium", styles[tone])}>{children}</span>;
 }
 
-function StatCard({ label, value, hint, icon: Icon }) {
+function StatCard({ label, value, hint, icon: Icon, compact = false }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <div className={cn("rounded-3xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]", compact ? "p-4 xl:p-4" : "p-5")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
+          <p className={cn("font-semibold tracking-tight text-slate-900", compact ? "text-2xl xl:text-[1.8rem]" : "text-3xl")}>{value}</p>
           <p className="mt-1 text-sm font-medium text-slate-700">{label}</p>
           <p className="mt-2 text-xs text-slate-500">{hint}</p>
         </div>
@@ -243,14 +243,14 @@ function Sidebar({ page, onSelectPage, mobileOpen, setMobileOpen }) {
   );
 }
 
-export function AppShell({ page, onSelectPage, mobileOpen, setMobileOpen, children }) {
+export function AppShell({ page, onSelectPage, mobileOpen, setMobileOpen, mainClassName, children }) {
   return (
     <div className="min-h-screen bg-[#f6f6f3] text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar page={page} onSelectPage={onSelectPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
         <div className="min-w-0 flex-1">
           <AppHeader setMobileOpen={setMobileOpen} />
-          <main className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:py-8">
+          <main className={cn("mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:py-8", mainClassName)}>
             {children}
           </main>
         </div>
@@ -286,7 +286,7 @@ function PromptIdeaCard({ label, description, prompt, onSelect }) {
   );
 }
 
-function AIPromptHero({ prompt, setPrompt, onSubmit }) {
+function AIPromptHero({ prompt, setPrompt, onSubmit, compact = false }) {
   const promptWordCount = prompt.trim() ? prompt.trim().split(/\s+/).length : 0;
   const leadPoints = [
     { label: "Less setup", value: "Describe the product once instead of stitching filters together." },
@@ -295,7 +295,7 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
   ];
 
   return (
-    <section className="relative overflow-hidden rounded-[36px] border border-white/80 bg-[linear-gradient(135deg,#fbfaf5_0%,#f6f0e7_38%,#edf2eb_100%)] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] sm:p-8 xl:p-10">
+    <section className={cn("relative overflow-hidden rounded-[36px] border border-white/80 bg-[linear-gradient(135deg,#fbfaf5_0%,#f6f0e7_38%,#edf2eb_100%)] shadow-[0_20px_70px_rgba(15,23,42,0.08)]", compact ? "p-5 sm:p-6 xl:p-7" : "p-6 sm:p-8 xl:p-10")}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_32%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.08),transparent_30%)]" />
       <div className="relative">
@@ -304,15 +304,15 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
             <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
             Live brief composer
           </div>
-          <h1 className="mt-6 max-w-4xl font-[family:var(--font-sora)] text-4xl font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950 sm:text-5xl xl:text-[5.1rem]">
+          <h1 className={cn("max-w-4xl font-[family:var(--font-sora)] font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950", compact ? "mt-5 text-4xl sm:text-[3.6rem] xl:text-[4.4rem]" : "mt-6 text-4xl sm:text-5xl xl:text-[5.1rem]")}>
             Write the brief once. Get a sharper shortlist back.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+          <p className={cn("max-w-2xl text-slate-600", compact ? "mt-4 text-base leading-7" : "mt-6 text-lg leading-8")}>
             Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
           </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className={cn("grid gap-4 sm:grid-cols-3", compact ? "mt-6 xl:mt-5" : "mt-8")}>
             {leadPoints.map((item) => (
-              <div key={item.label} className="border-l border-slate-300/70 pl-4">
+              <div key={item.label} className={cn("border-l border-slate-300/70 pl-4", compact ? "lg:hidden 2xl:block" : "")}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
                 <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
               </div>
@@ -320,11 +320,11 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
           </div>
         </div>
 
-        <div className="mt-8">
-          <div className="rounded-[32px] border border-white/80 bg-white/70 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
-            <div className="flex flex-col gap-6">
+        <div className={cn(compact ? "mt-6" : "mt-8")}>
+          <div className={cn("rounded-[32px] border border-white/80 bg-white/70 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur", compact ? "p-4 sm:p-5" : "p-5 sm:p-6")}>
+            <div className={cn("flex flex-col", compact ? "gap-4" : "gap-6")}>
               <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(15,23,42,0.04)] sm:p-5">
-                <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="min-h-[210px] w-full bg-transparent text-[17px] leading-8 text-slate-900 outline-none transition placeholder:text-slate-400" />
+                <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className={cn("w-full bg-transparent text-[17px] text-slate-900 outline-none transition placeholder:text-slate-400", compact ? "min-h-[180px] leading-7 xl:min-h-[160px]" : "min-h-[210px] leading-8")} />
 
                 <div className="mt-5 flex flex-col gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
@@ -333,7 +333,7 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
                     <span>Include stack, timing, and budget</span>
                   </div>
 
-                  <button type="button" onClick={onSubmit} className="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:bg-slate-900 sm:w-auto">
+                  <button type="button" onClick={onSubmit} className={cn("group inline-flex w-full items-center justify-center gap-3 rounded-full bg-slate-950 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:bg-slate-900 sm:w-auto", compact ? "px-5 py-3" : "px-5 py-3.5")}>
                     <span>Find matching developers</span>
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition group-hover:translate-x-0.5">
                       <ArrowRight className="h-4 w-4" />
@@ -417,13 +417,13 @@ function ResultsFilterSidebar({ parsed, filters, setFilters, resultCount }) {
 
 export function MarketplaceLanding({ prompt, setPrompt, onGenerate }) {
   return (
-    <div className="space-y-8">
-      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Developer pool" value="1,000+" hint="Frontend, backend, mobile, AI, DevOps" icon={Users} />
-        <StatCard label="Average fill time" value="48h" hint="For common stacks and shortlists" icon={Clock3} />
-        <StatCard label="Bookings managed" value="2.4k" hint="Across trial, project, and retained work" icon={CalendarDays} />
-        <StatCard label="Platform margin" value="18%" hint="Placeholder admin margin control" icon={Wallet} />
+    <div className="flex h-full min-h-0 flex-col gap-4 lg:gap-5">
+      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} compact />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Developer pool" value="1,000+" hint="Frontend, backend, mobile, AI, DevOps" icon={Users} compact />
+        <StatCard label="Average fill time" value="48h" hint="For common stacks and shortlists" icon={Clock3} compact />
+        <StatCard label="Bookings managed" value="2.4k" hint="Across trial, project, and retained work" icon={CalendarDays} compact />
+        <StatCard label="Platform margin" value="18%" hint="Placeholder admin margin control" icon={Wallet} compact />
       </div>
     </div>
   );
