@@ -237,7 +237,6 @@ function AppHeader({ setMobileOpen, shortlistCount = 0, onOpenShortlist }) {
             </button>
           ) : null}
           <div className="hidden items-center gap-3 md:flex">
-            <Pill tone="slate">1,000 developer library</Pill>
             <button type="button" className={primaryButtonClass}>Post requirement</button>
           </div>
         </div>
@@ -273,14 +272,14 @@ function Sidebar({ page, onSelectPage, mobileOpen, setMobileOpen }) {
         </nav>
       </div>
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-        <Pill tone="green">AI matching flow</Pill>
-        <p className="mt-3 text-sm leading-6 text-slate-600">Clients describe what they want to build. The platform parses the brief, ranks developer fit, and then lets them refine results.</p>
+        <Pill tone="green">Gitwork internal demo</Pill>
+        <p className="mt-3 text-sm leading-6 text-slate-600">Internal sandbox for the marketplace workflow: parse a brief, rank likely fits, shortlist candidates, and hand the strongest option into booking.</p>
       </div>
     </div>
   );
   return (
     <>
-      <aside className="hidden w-[280px] border-r border-slate-200 bg-white p-6 lg:block">{content}</aside>
+      <aside className="hidden h-screen w-[280px] shrink-0 border-r border-slate-200 bg-white p-6 lg:sticky lg:top-0 lg:block">{content}</aside>
       <AnimatePresence>
         {mobileOpen ? <>
           <motion.div className="fixed inset-0 z-40 bg-slate-950/20 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
@@ -333,7 +332,9 @@ function NativeSelect({ id, value, options, onChange, className }) {
           return <option key={option.value} value={option.value}>{option.label}</option>;
         })}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 flex w-14 items-center justify-center">
+        <ChevronDown className="h-4 w-4 text-slate-500" />
+      </span>
     </div>
   );
 }
@@ -461,7 +462,7 @@ function MatchSummary({ parsed, count }) {
           <p className="text-sm font-semibold text-slate-900">Top matches for your brief</p>
           <p className="mt-1 text-sm text-slate-600">Parsed as a {parsed.projectType.toLowerCase()} brief with {parsed.matchedStacks.length ? parsed.matchedStacks.join(", ") : "generalist"} requirements and a budget around £{parsed.budget}.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2"><Pill tone="green">{count} matches ranked</Pill><Pill tone="slate">AI parse demo</Pill></div>
+        <div className="flex flex-wrap items-center gap-2"><Pill tone="green">{count} matches ranked</Pill></div>
       </div>
     </div>
   );
@@ -472,13 +473,13 @@ function ResultsFilterSidebar({ parsed, filters, setFilters, resultCount }) {
   const reset = () => setFilters({ query: "", stack: "All stacks", availability: "Any availability", maxRate: 900 });
   return (
     <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:sticky xl:top-24">
-      <div className="flex items-start justify-between gap-4">
+      <div className="relative pr-28">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Refine results</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Filter developers</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">Once the brief has been parsed, classic filters become the second pass.</p>
         </div>
-        {activeFilterCount ? <Pill tone="slate">{activeFilterCount} active</Pill> : null}
+        {activeFilterCount ? <div className="absolute right-0 top-0"><Pill tone="slate">{activeFilterCount} active</Pill></div> : null}
       </div>
       <div className="mt-6 space-y-3">
         <div className="relative">
