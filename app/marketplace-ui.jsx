@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Archive,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
@@ -12,7 +13,10 @@ import {
   LayoutDashboard,
   MapPin,
   Menu,
+  PencilLine,
+  Plus,
   PoundSterling,
+  RotateCcw,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -60,6 +64,16 @@ const promptIdeas = [
     prompt: examplePrompts[2]
   }
 ];
+
+export function normalizeDeveloperRecord(developer) {
+  return {
+    ...developer,
+    profileStatus: developer.profileStatus ?? "Live",
+    vetted: developer.vetted ?? true,
+    skills: Array.isArray(developer.skills) ? developer.skills : [],
+    domains: Array.isArray(developer.domains) ? developer.domains : []
+  };
+}
 
 const defaultBookings = [
   {
@@ -193,9 +207,12 @@ function buildReasons(dev, parsed) {
   return reasons.slice(0, 3);
 }
 
-function rankDevelopers(prompt, filters) {
+function rankDevelopers(prompt, filters, currentDevelopers = developers) {
   const parsed = parsePrompt(prompt);
-  const ranked = developers.map((dev) => {
+  const ranked = currentDevelopers
+  .map(normalizeDeveloperRecord)
+  .filter((dev) => dev.profileStatus !== "Archived")
+  .map((dev) => {
     let score = 0;
     const stackMatches = dev.skills.filter((s) => parsed.matchedStacks.includes(s));
     score += stackMatches.length * 30;
@@ -557,6 +574,7 @@ export function MarketplaceLanding({ prompt, setPrompt, onGenerate }) {
 }
 
 export function MarketplaceResults({
+  developers,
   prompt,
   filters,
   setFilters,
@@ -565,7 +583,7 @@ export function MarketplaceResults({
   onToggleShortlist,
   onRequestBooking
 }) {
-  const { parsed, ranked } = useMemo(() => rankDevelopers(prompt, filters), [prompt, filters]);
+  const { parsed, ranked } = useMemo(() => rankDevelopers(prompt, filters, developers), [prompt, filters, developers]);
   return (
     <div className="space-y-6">
       <MatchSummary parsed={parsed} count={ranked.length} />
@@ -778,16 +796,287 @@ export function BookingsPage({ requests = [] }) {
   );
 }
 
-export function DevelopersPage() {
+function getDeveloperStatusTone(status) {
+  if (status === "Live") return "green";
+  if (status === "Review") return "amber";
+  if (status === "Paused" || status === "Archived") return "slate";
+  return "default";
+}
+
+function buildDeveloperDraft(developer) {
+  const record = developer ? normalizeDeveloperRecord(developer) : null;
+  return {
+    id: record?.id ?? null,
+    name: record?.name ?? "",
+    role: record?.role ?? "",
+    location: record?.location ?? "",
+    timezone: record?.timezone ?? "GMT",
+    availability: record?.availability ?? "Available this week",
+    seniority: record?.seniority ?? "Senior",
+    rate: record?.rate ?? 550,
+    bookingType: record?.bookingType ?? "Day rate",
+    rating: record?.rating ?? 4.8,
+    years: record?.years ?? 6,
+    skills: record?.skills?.join(", ") ?? "",
+    domains: record?.domains?.join(", ") ?? "",
+    summary: record?.summary ?? "",
+    profileStatus: record?.profileStatus ?? "Live",
+    vetted: record?.vetted ? "Yes" : "No"
+  };
+}
+
+function parseDeveloperDraft(draft) {
+  return normalizeDeveloperRecord({
+    id: draft.id,
+    name: draft.name.trim(),
+    role: draft.role.trim(),
+    location: draft.location.trim(),
+    timezone: draft.timezone.trim(),
+    availability: draft.availability.trim(),
+    seniority: draft.seniority,
+    rate: Number(draft.rate),
+    bookingType: draft.bookingType,
+    rating: Number(draft.rating),
+    years: Number(draft.years),
+    skills: draft.skills.split(",").map((item) => item.trim()).filter(Boolean),
+    domains: draft.domains.split(",").map((item) => item.trim()).filter(Boolean),
+    summary: draft.summary.trim(),
+    profileStatus: draft.profileStatus,
+    vetted: draft.vetted === "Yes"
+  });
+}
+
+function DeveloperEditorModal({ open, developer, onClose, onSave }) {
+  useLockBodyScroll(open);
+
+  const [draft, setDraft] = useState(buildDeveloperDraft(developer));
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft(buildDeveloperDraft(developer));
+  }, [open, developer]);
+
+  if (!open) return null;
+
+  const updateDraft = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
+
+  return (
+    <AnimatePresence>
+      <>
+        <motion.div className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-[1px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-start justify-center p-3 pt-6 sm:p-6">
+          <motion.div className="pointer-events-auto max-h-full w-full max-w-5xl overflow-y-auto rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-7" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.98 }} transition={{ duration: 0.18 }}>
+            <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Developer record</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">{developer ? "Edit developer" : "Add developer"}</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Maintain the supply bench here so the marketplace, shortlist, and booking flows all read from the same profile data.</p>
+              </div>
+              <button type="button" onClick={onClose} className={cn(iconButtonClass, "self-end sm:self-start")}><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-name">Name</label>
+                <input id="developer-name" value={draft.name} onChange={(e) => updateDraft("name", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-role">Role</label>
+                <input id="developer-role" value={draft.role} onChange={(e) => updateDraft("role", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-location">Location</label>
+                <input id="developer-location" value={draft.location} onChange={(e) => updateDraft("location", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-timezone">Timezone</label>
+                <input id="developer-timezone" value={draft.timezone} onChange={(e) => updateDraft("timezone", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-availability">Availability</label>
+                <input id="developer-availability" value={draft.availability} onChange={(e) => updateDraft("availability", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-seniority">Seniority</label>
+                <NativeSelect id="developer-seniority" value={draft.seniority} onChange={(e) => updateDraft("seniority", e.target.value)} options={["Senior", "Midweight", "Junior"]} className="mt-3" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-rate">Day rate</label>
+                <input id="developer-rate" type="number" min="250" step="10" value={draft.rate} onChange={(e) => updateDraft("rate", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-years">Years experience</label>
+                <input id="developer-years" type="number" min="1" step="1" value={draft.years} onChange={(e) => updateDraft("years", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-rating">Rating</label>
+                <input id="developer-rating" type="number" min="1" max="5" step="0.1" value={draft.rating} onChange={(e) => updateDraft("rating", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-booking-type">Booking type</label>
+                <NativeSelect id="developer-booking-type" value={draft.bookingType} onChange={(e) => updateDraft("bookingType", e.target.value)} options={["Day rate", "Project", "Retained"]} className="mt-3" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-status">Profile status</label>
+                <NativeSelect id="developer-status" value={draft.profileStatus} onChange={(e) => updateDraft("profileStatus", e.target.value)} options={["Live", "Review", "Paused", "Archived"]} className="mt-3" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-skills">Skills</label>
+                <input id="developer-skills" value={draft.skills} onChange={(e) => updateDraft("skills", e.target.value)} placeholder="React, Node.js, TypeScript" className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-domains">Domains</label>
+                <input id="developer-domains" value={draft.domains} onChange={(e) => updateDraft("domains", e.target.value)} placeholder="SaaS, Operations, Internal Tools" className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-summary">Summary</label>
+                <textarea id="developer-summary" value={draft.summary} onChange={(e) => updateDraft("summary", e.target.value)} className="mt-3 min-h-[140px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition focus:border-slate-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="developer-vetted">Vetted</label>
+                <NativeSelect id="developer-vetted" value={draft.vetted} onChange={(e) => updateDraft("vetted", e.target.value)} options={["Yes", "No"]} className="mt-3" />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+              <button type="button" onClick={onClose} className={cn(secondaryButtonClass, "rounded-full px-5 py-3")}>Cancel</button>
+              <button
+                type="button"
+                onClick={() => onSave(parseDeveloperDraft(draft))}
+                className={cn(primaryButtonClass, "rounded-full px-5 py-3")}
+                disabled={!draft.name.trim() || !draft.role.trim()}
+              >
+                Save developer
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </>
+    </AnimatePresence>
+  );
+}
+
+export function DevelopersPage({ developers = [], onSaveDeveloper, onToggleDeveloperArchived }) {
+  const records = useMemo(() => developers.map(normalizeDeveloperRecord), [developers]);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All statuses");
+  const [editorState, setEditorState] = useState({ open: false, developer: null });
+
+  const visibleRecords = records.filter((developer) => {
+    const haystack = `${developer.name} ${developer.role} ${developer.skills.join(" ")} ${developer.location} ${developer.summary}`.toLowerCase();
+    const matchesQuery = !query || haystack.includes(query.toLowerCase());
+    const matchesStatus = statusFilter === "All statuses" || developer.profileStatus === statusFilter;
+    return matchesQuery && matchesStatus;
+  });
+
+  const liveBench = records.filter((developer) => developer.profileStatus === "Live").length;
+  const reviewBench = records.filter((developer) => developer.profileStatus === "Review").length;
+  const averageRate = records.length ? Math.round(records.reduce((total, developer) => total + developer.rate, 0) / records.length) : 0;
+  const vettedPercentage = records.length ? `${Math.round((records.filter((developer) => developer.vetted).length / records.length) * 100)}%` : "0%";
+
   return (
     <div className="space-y-6">
-      <SectionHeading eyebrow="Developer supply" title="Manage talent inventory" body="Admin can review profiles, stack coverage, rates, and supply gaps across the developer bench." />
+      <SectionHeading eyebrow="Developer supply" title="Manage talent inventory" body="Add, edit, pause, or archive supply records here. This is the internal source of truth the matching flow reads from." action={<button type="button" onClick={() => setEditorState({ open: true, developer: null })} className={cn(primaryButtonClass, "rounded-full px-4 py-3")}><Plus className="h-4 w-4" />Add developer</button>} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Active this week" value="684" hint="Currently bookable" icon={CalendarDays} />
-        <StatCard label="Top stack gap" value="Go" hint="Demand exceeds supply" icon={Code2} />
-        <StatCard label="Average day rate" value="£545" hint="Across active profiles" icon={PoundSterling} />
-        <StatCard label="Vetted profiles" value="91%" hint="Completed screening" icon={ShieldCheck} />
+        <StatCard label="Live bench" value={String(liveBench)} hint="Profiles currently available to matching" icon={CalendarDays} />
+        <StatCard label="In review" value={String(reviewBench)} hint="Needs supply or ops follow-up" icon={Code2} />
+        <StatCard label="Average day rate" value={formatCurrency(averageRate)} hint="Across managed profiles" icon={PoundSterling} />
+        <StatCard label="Vetted profiles" value={vettedPercentage} hint="Share of profiles marked ready" icon={ShieldCheck} />
       </div>
+
+      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, role, skill, or location" className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+          </div>
+          <NativeSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={["All statuses", "Live", "Review", "Paused", "Archived"]} />
+          <div className="flex items-center justify-end">
+            <Pill tone="slate">{visibleRecords.length} profiles</Pill>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:[grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+          {visibleRecords.map((developer) => (
+            <div key={developer.id} className={cn("rounded-[28px] border border-slate-200 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]", developer.profileStatus === "Archived" ? "bg-slate-50" : "bg-white")}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
+                    <Pill tone={getDeveloperStatusTone(developer.profileStatus)}>{developer.profileStatus}</Pill>
+                    {developer.vetted ? <Pill tone="green">Vetted</Pill> : null}
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+                </div>
+                <div className="shrink-0 sm:text-right">
+                  <p className="text-2xl font-semibold tracking-tight text-slate-950">{formatCurrency(developer.rate)}</p>
+                  <p className="text-xs font-medium text-slate-500">{developer.bookingType}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Availability</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900">{developer.availability}</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Location</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900">{developer.location} · {developer.timezone}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {developer.skills.slice(0, 5).map((skill) => <Pill key={skill}>{skill}</Pill>)}
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-slate-600">{developer.summary}</p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={() => setEditorState({ open: true, developer })} className={cn(secondaryButtonClass, "rounded-full px-4 py-3")}><PencilLine className="h-4 w-4" />Edit</button>
+                <button type="button" onClick={() => onToggleDeveloperArchived(developer.id)} className={cn(secondaryButtonClass, "rounded-full px-4 py-3")}>
+                  {developer.profileStatus === "Archived" ? <RotateCcw className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                  {developer.profileStatus === "Archived" ? "Restore" : "Archive"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!visibleRecords.length ? (
+          <div className="mt-5 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6">
+            <p className="text-lg font-semibold tracking-tight text-slate-950">No developers match that view</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Try a different status filter or search term, or add a new developer record to the bench.</p>
+          </div>
+        ) : null}
+      </div>
+
+      <DeveloperEditorModal
+        open={editorState.open}
+        developer={editorState.developer}
+        onClose={() => setEditorState({ open: false, developer: null })}
+        onSave={(record) => {
+          onSaveDeveloper(record);
+          setEditorState({ open: false, developer: null });
+        }}
+      />
     </div>
   );
 }

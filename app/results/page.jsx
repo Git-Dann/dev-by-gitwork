@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   AdminPage,
   AppShell,
@@ -11,8 +11,9 @@ import {
   MarketplaceResults,
   ProfileModal,
   ShortlistReviewModal,
-  developers,
+  developers as initialDevelopers,
   examplePrompts,
+  normalizeDeveloperRecord,
 } from "../marketplace-ui";
 
 function useStoredState(key, initialValue) {
@@ -50,12 +51,14 @@ function ResultsPageContent() {
   const [shortlistIds, setShortlistIds] = useStoredState("dev-by-gitwork-shortlist", []);
   const [shortlistNotes, setShortlistNotes] = useStoredState("dev-by-gitwork-shortlist-notes", {});
   const [bookingRequests, setBookingRequests] = useStoredState("dev-by-gitwork-booking-requests", []);
+  const [developerRecordsRaw, setDeveloperRecordsRaw] = useStoredState("dev-by-gitwork-developers", initialDevelopers.map(normalizeDeveloperRecord));
 
   useEffect(() => {
     setPrompt(searchParams.get("prompt") || examplePrompts[0]);
   }, [searchParams]);
 
-  const shortlistedDevelopers = developers.filter((developer) => shortlistIds.includes(developer.id));
+  const developerRecords = useMemo(() => developerRecordsRaw.map(normalizeDeveloperRecord), [developerRecordsRaw]);
+  const shortlistedDevelopers = developerRecords.filter((developer) => shortlistIds.includes(developer.id));
 
   const toggleShortlist = (developerId) => {
     setShortlistIds((current) => current.includes(developerId) ? current.filter((id) => id !== developerId) : [...current, developerId]);
@@ -77,6 +80,29 @@ function ResultsPageContent() {
     setPage("bookings");
   };
 
+  const handleSaveDeveloper = (record) => {
+    setDeveloperRecordsRaw((current) => {
+      const normalized = normalizeDeveloperRecord({
+        ...record,
+        id: record.id ?? Date.now()
+      });
+      const existing = current.some((developer) => developer.id === normalized.id);
+      if (existing) return current.map((developer) => developer.id === normalized.id ? normalized : developer);
+      return [normalized, ...current];
+    });
+  };
+
+  const handleToggleDeveloperArchived = (developerId) => {
+    setDeveloperRecordsRaw((current) => current.map((developer) => {
+      if (developer.id !== developerId) return developer;
+      const normalized = normalizeDeveloperRecord(developer);
+      return {
+        ...normalized,
+        profileStatus: normalized.profileStatus === "Archived" ? "Live" : "Archived"
+      };
+    }));
+  };
+
   const handleSelectPage = (nextPage) => {
     if (nextPage === "marketplace") {
       router.push("/");
@@ -89,9 +115,9 @@ function ResultsPageContent() {
   return (
     <>
       <AppShell page={page} onSelectPage={handleSelectPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} shortlistCount={shortlistIds.length} onOpenShortlist={() => setShortlistOpen(true)}>
-        {page === "marketplace" ? <MarketplaceResults prompt={prompt} filters={filters} setFilters={setFilters} onOpen={setActiveDeveloper} shortlistIds={shortlistIds} onToggleShortlist={toggleShortlist} onRequestBooking={handleRequestBooking} /> : null}
+        {page === "marketplace" ? <MarketplaceResults developers={developerRecords} prompt={prompt} filters={filters} setFilters={setFilters} onOpen={setActiveDeveloper} shortlistIds={shortlistIds} onToggleShortlist={toggleShortlist} onRequestBooking={handleRequestBooking} /> : null}
         {page === "bookings" ? <BookingsPage requests={bookingRequests} /> : null}
-        {page === "developers" ? <DevelopersPage /> : null}
+        {page === "developers" ? <DevelopersPage developers={developerRecords} onSaveDeveloper={handleSaveDeveloper} onToggleDeveloperArchived={handleToggleDeveloperArchived} /> : null}
         {page === "admin" ? <AdminPage /> : null}
       </AppShell>
       <ProfileModal developer={activeDeveloper} isShortlisted={activeDeveloper ? shortlistIds.includes(activeDeveloper.id) : false} onClose={() => setActiveDeveloper(null)} onToggleShortlist={toggleShortlist} onRequestBooking={handleRequestBooking} />
