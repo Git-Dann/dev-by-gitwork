@@ -283,7 +283,7 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_32%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.08),transparent_30%)]" />
       <div className="relative">
-        <div className="max-w-5xl">
+        <div>
           <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/72 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
             <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
             Live brief composer
@@ -304,21 +304,9 @@ function AIPromptHero({ prompt, setPrompt, onSubmit }) {
           </div>
         </div>
 
-        <div className="mt-8 max-w-5xl">
+        <div className="mt-8">
           <div className="rounded-[32px] border border-white/80 bg-white/70 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
             <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4">
-                <div className="min-w-0 max-w-2xl">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Project brief</p>
-                  <h2 className="mt-3 font-[family:var(--font-sora)] text-[1.7rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2rem]">
-                    Describe the build in two or three clear sentences.
-                  </h2>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-                    Keep it simple. Stack, timeline, budget, and the kind of product you need are enough.
-                  </p>
-                </div>
-              </div>
-
               <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(15,23,42,0.04)] sm:p-5">
                 <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="min-h-[210px] w-full bg-transparent text-[17px] leading-8 text-slate-900 outline-none transition placeholder:text-slate-400" />
 
