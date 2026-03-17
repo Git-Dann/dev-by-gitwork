@@ -88,14 +88,14 @@ function ResultsPageContent() {
 
   return (
     <>
-      <AppShell page={page} onSelectPage={handleSelectPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}>
-        {page === "marketplace" ? <MarketplaceResults prompt={prompt} filters={filters} setFilters={setFilters} onOpen={setActiveDeveloper} shortlistIds={shortlistIds} shortlistedDevelopers={shortlistedDevelopers} onToggleShortlist={toggleShortlist} onReviewShortlist={() => setShortlistOpen(true)} onRequestBooking={handleRequestBooking} /> : null}
+      <AppShell page={page} onSelectPage={handleSelectPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} shortlistCount={shortlistIds.length} onOpenShortlist={() => setShortlistOpen(true)}>
+        {page === "marketplace" ? <MarketplaceResults prompt={prompt} filters={filters} setFilters={setFilters} onOpen={setActiveDeveloper} shortlistIds={shortlistIds} onToggleShortlist={toggleShortlist} onRequestBooking={handleRequestBooking} /> : null}
         {page === "bookings" ? <BookingsPage requests={bookingRequests} /> : null}
         {page === "developers" ? <DevelopersPage /> : null}
         {page === "admin" ? <AdminPage /> : null}
       </AppShell>
       <ProfileModal developer={activeDeveloper} isShortlisted={activeDeveloper ? shortlistIds.includes(activeDeveloper.id) : false} onClose={() => setActiveDeveloper(null)} onToggleShortlist={toggleShortlist} onRequestBooking={handleRequestBooking} />
-      <ShortlistReviewModal developers={shortlistOpen ? shortlistedDevelopers : []} notes={shortlistNotes} onClose={() => setShortlistOpen(false)} onToggleShortlist={toggleShortlist} onUpdateNote={updateShortlistNote} onRequestBooking={handleRequestBooking} />
+      <ShortlistReviewModal open={shortlistOpen} developers={shortlistedDevelopers} notes={shortlistNotes} onClose={() => setShortlistOpen(false)} onToggleShortlist={toggleShortlist} onUpdateNote={updateShortlistNote} onRequestBooking={handleRequestBooking} />
       <BookingFlowModal developer={bookingDeveloper} prompt={prompt} onClose={() => setBookingDeveloper(null)} onSubmit={handleSubmitBookingRequest} />
     </>
   );

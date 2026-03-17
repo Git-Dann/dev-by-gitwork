@@ -217,7 +217,7 @@ function SectionHeading({ eyebrow, title, body, action }) {
   );
 }
 
-function AppHeader({ setMobileOpen }) {
+function AppHeader({ setMobileOpen, shortlistCount = 0, onOpenShortlist }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 xl:px-8">
@@ -228,9 +228,17 @@ function AppHeader({ setMobileOpen }) {
             <p className="hidden text-xs text-slate-500 sm:block">AI-first developer matching for project briefs</p>
           </div>
         </div>
-        <div className="hidden items-center gap-3 md:flex">
-          <Pill tone="slate">1,000 developer library</Pill>
-          <button type="button" className={primaryButtonClass}>Post requirement</button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onOpenShortlist ? (
+            <button type="button" onClick={onOpenShortlist} className={cn(secondaryButtonClass, "h-10 rounded-full px-3 sm:px-4")}>
+              <span>Shortlist</span>
+              <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">{shortlistCount}</span>
+            </button>
+          ) : null}
+          <div className="hidden items-center gap-3 md:flex">
+            <Pill tone="slate">1,000 developer library</Pill>
+            <button type="button" className={primaryButtonClass}>Post requirement</button>
+          </div>
         </div>
       </div>
     </header>
@@ -282,13 +290,13 @@ function Sidebar({ page, onSelectPage, mobileOpen, setMobileOpen }) {
   );
 }
 
-export function AppShell({ page, onSelectPage, mobileOpen, setMobileOpen, mainClassName, children }) {
+export function AppShell({ page, onSelectPage, mobileOpen, setMobileOpen, mainClassName, shortlistCount, onOpenShortlist, children }) {
   return (
     <div className="min-h-screen bg-[#f6f6f3] text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar page={page} onSelectPage={onSelectPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
         <div className="min-w-0 flex-1">
-          <AppHeader setMobileOpen={setMobileOpen} />
+          <AppHeader setMobileOpen={setMobileOpen} shortlistCount={shortlistCount} onOpenShortlist={onOpenShortlist} />
           <main className={cn("mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:py-8", mainClassName)}>
             {children}
           </main>
@@ -442,7 +450,7 @@ function ResultsFilterSidebar({ parsed, filters, setFilters, resultCount }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Refine results</p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Filter the shortlist</h2>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Filter developers</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">Once the brief has been parsed, classic filters become the second pass.</p>
         </div>
         {activeFilterCount ? <Pill tone="slate">{activeFilterCount} active</Pill> : null}
@@ -483,85 +491,22 @@ export function MarketplaceLanding({ prompt, setPrompt, onGenerate }) {
   );
 }
 
-function ShortlistRail({ developers: shortlistedDevelopers, onReviewShortlist, onToggleShortlist, onRequestBooking }) {
-  const averageRate = shortlistedDevelopers.length ? Math.round(shortlistedDevelopers.reduce((total, developer) => total + developer.rate, 0) / shortlistedDevelopers.length) : 0;
-
-  return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:sticky xl:top-24">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Shortlist</p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Review like a cart</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">Save candidates, compare fit, and come back later with message notes or booking requests.</p>
-        </div>
-        <Pill tone={shortlistedDevelopers.length ? "green" : "slate"}>{shortlistedDevelopers.length}</Pill>
-      </div>
-
-      {shortlistedDevelopers.length ? (
-        <>
-          <div className="mt-6 space-y-3">
-            {shortlistedDevelopers.map((developer) => (
-              <div key={developer.id} className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">{developer.name}</p>
-                    <p className="mt-1 text-sm text-slate-500">{developer.role}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-900">{formatCurrency(developer.rate)}</p>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
-                  <Pill>{developer.skills[0]}</Pill>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "flex-1 rounded-full px-3 py-2 text-xs")}>
-                    Request booking
-                  </button>
-                  <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(secondaryButtonClass, "rounded-full px-3 py-2 text-xs")}>
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-[24px] bg-slate-950 p-4 text-white">
-            <p className="text-sm font-semibold">{shortlistedDevelopers.length} developers saved</p>
-            <p className="mt-2 text-sm text-white/72">Average day rate {formatCurrency(averageRate)}. Keep this list warm for outreach or move directly into a booking request.</p>
-          </div>
-
-          <button type="button" onClick={onReviewShortlist} className={cn(primaryButtonClass, "mt-4 w-full rounded-full px-4 py-3")}>
-            Review shortlist
-          </button>
-        </>
-      ) : (
-        <div className="mt-6 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5">
-          <p className="text-sm font-semibold text-slate-900">Nothing saved yet</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Shortlist developers from the ranked results. The review step is where message notes and booking decisions can happen later.</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function MarketplaceResults({
   prompt,
   filters,
   setFilters,
   onOpen,
   shortlistIds,
-  shortlistedDevelopers,
   onToggleShortlist,
-  onReviewShortlist,
   onRequestBooking
 }) {
   const { parsed, ranked } = useMemo(() => rankDevelopers(prompt, filters), [prompt, filters]);
   return (
     <div className="space-y-6">
       <MatchSummary parsed={parsed} count={ranked.length} />
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <ResultsFilterSidebar parsed={parsed} filters={filters} setFilters={setFilters} resultCount={ranked.length} />
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5 sm:[grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
           {ranked.map((developer) => (
             <DeveloperCard
               key={developer.id}
@@ -573,12 +518,6 @@ export function MarketplaceResults({
             />
           ))}
         </div>
-        <ShortlistRail
-          developers={shortlistedDevelopers}
-          onReviewShortlist={onReviewShortlist}
-          onToggleShortlist={onToggleShortlist}
-          onRequestBooking={onRequestBooking}
-        />
       </div>
     </div>
   );
@@ -608,14 +547,14 @@ function DeveloperCard({ developer, isShortlisted, onOpen, onToggleShortlist, on
         <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 shrink-0" />{developer.timezone}</span>
         <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 shrink-0" />{developer.rating}</span>
       </div>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <button type="button" onClick={() => onOpen(developer)} className={cn(secondaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
           View profile
         </button>
         <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(isShortlisted ? primaryButtonClass : secondaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
           {isShortlisted ? "Shortlisted" : "Add to shortlist"}
         </button>
-        <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
+        <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "sm:col-span-2 rounded-full px-4 py-3")}>
           Request booking
         </button>
       </div>
@@ -679,10 +618,10 @@ export function AdminPage() {
   );
 }
 
-export function ShortlistReviewModal({ developers: shortlistedDevelopers, notes, onClose, onToggleShortlist, onUpdateNote, onRequestBooking }) {
-  if (!shortlistedDevelopers.length) return null;
+export function ShortlistReviewModal({ open, developers: shortlistedDevelopers, notes, onClose, onToggleShortlist, onUpdateNote, onRequestBooking }) {
+  if (!open) return null;
 
-  const averageRate = Math.round(shortlistedDevelopers.reduce((total, developer) => total + developer.rate, 0) / shortlistedDevelopers.length);
+  const averageRate = shortlistedDevelopers.length ? Math.round(shortlistedDevelopers.reduce((total, developer) => total + developer.rate, 0) / shortlistedDevelopers.length) : 0;
 
   return (
     <AnimatePresence>
@@ -701,44 +640,51 @@ export function ShortlistReviewModal({ developers: shortlistedDevelopers, notes,
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="space-y-4">
-                {shortlistedDevelopers.map((developer) => (
-                  <div key={developer.id} className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
-                          <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
-                          <Pill>{developer.seniority}</Pill>
+                {shortlistedDevelopers.length ? (
+                  shortlistedDevelopers.map((developer) => (
+                    <div key={developer.id} className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
+                            <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
+                            <Pill>{developer.seniority}</Pill>
+                          </div>
+                          <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+                          <p className="mt-3 text-sm leading-6 text-slate-600">{developer.summary}</p>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {developer.skills.slice(0, 4).map((skill) => <Pill key={skill}>{skill}</Pill>)}
+                          </div>
                         </div>
-                        <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">{developer.summary}</p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {developer.skills.slice(0, 4).map((skill) => <Pill key={skill}>{skill}</Pill>)}
+                        <div className="shrink-0 rounded-[24px] border border-slate-200 bg-white p-4 lg:w-[220px]">
+                          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Day rate</p>
+                          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{formatCurrency(developer.rate)}</p>
+                          <p className="mt-1 text-sm text-slate-500">{developer.bookingType}</p>
                         </div>
                       </div>
-                      <div className="shrink-0 rounded-[24px] border border-slate-200 bg-white p-4 lg:w-[220px]">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Day rate</p>
-                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{formatCurrency(developer.rate)}</p>
-                        <p className="mt-1 text-sm text-slate-500">{developer.bookingType}</p>
-                      </div>
-                    </div>
 
-                    <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-                      <div>
-                        <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor={`shortlist-note-${developer.id}`}>Message prep</label>
-                        <textarea id={`shortlist-note-${developer.id}`} value={notes[developer.id] || ""} onChange={(e) => onUpdateNote(developer.id, e.target.value)} placeholder="Save context for later outreach: project angle, concerns, who should speak to them, or why they made the shortlist." className="mt-3 min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "w-full rounded-full px-4 py-3")}>
-                          Request booking
-                        </button>
-                        <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(secondaryButtonClass, "w-full rounded-full px-4 py-3")}>
-                          Remove from shortlist
-                        </button>
+                      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor={`shortlist-note-${developer.id}`}>Message prep</label>
+                          <textarea id={`shortlist-note-${developer.id}`} value={notes[developer.id] || ""} onChange={(e) => onUpdateNote(developer.id, e.target.value)} placeholder="Save context for later outreach: project angle, concerns, who should speak to them, or why they made the shortlist." className="mt-3 min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "w-full rounded-full px-4 py-3")}>
+                            Request booking
+                          </button>
+                          <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(secondaryButtonClass, "w-full rounded-full px-4 py-3")}>
+                            Remove from shortlist
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 p-6">
+                    <p className="text-lg font-semibold tracking-tight text-slate-950">No developers saved yet</p>
+                    <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Use the shortlist action on a developer card to save candidates here. This review space is where message notes and booking decisions should happen, not inside the results grid.</p>
                   </div>
-                ))}
+                )}
               </div>
 
               <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:sticky xl:top-24">
@@ -746,7 +692,7 @@ export function ShortlistReviewModal({ developers: shortlistedDevelopers, notes,
                 <div className="mt-5 space-y-4">
                   <div className="rounded-[24px] bg-slate-950 p-4 text-white">
                     <p className="text-sm font-semibold">{shortlistedDevelopers.length} developers saved</p>
-                    <p className="mt-2 text-sm text-white/72">Average rate {formatCurrency(averageRate)}. Use the notes field to keep outreach context with the shortlist.</p>
+                    <p className="mt-2 text-sm text-white/72">{shortlistedDevelopers.length ? `Average rate ${formatCurrency(averageRate)}. Use the notes field to keep outreach context with the shortlist.` : "Your shortlist count lives in the header so the results page can stay focused on ranking and filtering."}</p>
                   </div>
                   <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-semibold text-slate-900">Recommended next step</p>
