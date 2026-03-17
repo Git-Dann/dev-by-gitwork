@@ -44,6 +44,10 @@ const examplePrompts = [
 
 function cn(...parts) { return parts.filter(Boolean).join(" "); }
 
+const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300";
+const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200";
+const iconButtonClass = "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200";
+
 function parsePrompt(prompt) {
   const lower = prompt.toLowerCase();
   const stackKeywords = {
@@ -123,19 +127,19 @@ function Pill({ children, tone = "default" }) {
     slate: "bg-slate-50 text-slate-700 border-slate-200",
     dark: "bg-slate-900 text-white border-slate-900"
   };
-  return <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium", styles[tone])}>{children}</span>;
+  return <span className={cn("inline-flex items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium", styles[tone])}>{children}</span>;
 }
 
 function StatCard({ label, value, hint, icon: Icon }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-3xl font-semibold tracking-tight text-slate-900">{value}</p>
           <p className="mt-1 text-sm font-medium text-slate-700">{label}</p>
           <p className="mt-2 text-xs text-slate-500">{hint}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700"><Icon className="h-5 w-5" /></div>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700"><Icon className="h-5 w-5" /></div>
       </div>
     </div>
   );
@@ -158,16 +162,16 @@ function AppHeader({ setMobileOpen }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 xl:px-8">
-        <div className="flex items-center gap-3">
-          <button className="inline-flex rounded-2xl border border-slate-200 p-2 text-slate-700 lg:hidden" onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></button>
-          <div>
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" className={cn(iconButtonClass, "lg:hidden")} onClick={() => setMobileOpen(true)}><Menu className="h-5 w-5" /></button>
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900">Dev by Gitwork</p>
-            <p className="text-xs text-slate-500">AI-first developer matching for project briefs</p>
+            <p className="hidden text-xs text-slate-500 sm:block">AI-first developer matching for project briefs</p>
           </div>
         </div>
         <div className="hidden items-center gap-3 md:flex">
           <Pill tone="slate">1,000 developer library</Pill>
-          <button className="rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Post requirement</button>
+          <button type="button" className={primaryButtonClass}>Post requirement</button>
         </div>
       </div>
     </header>
@@ -182,19 +186,19 @@ function Sidebar({ page, setPage, mobileOpen, setMobileOpen }) {
     { id: "admin", label: "Admin", icon: LayoutDashboard }
   ];
   const content = (
-    <div className="flex h-full flex-col justify-between">
+    <div className="flex h-full flex-col justify-between gap-8 overflow-y-auto">
       <div>
         <div className="mb-8 flex items-center justify-between lg:block">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Dev by Gitwork</p>
             <h1 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">Developer marketplace</h1>
           </div>
-          <button className="rounded-2xl border border-slate-200 p-2 text-slate-600 lg:hidden" onClick={() => setMobileOpen(false)}><X className="h-5 w-5" /></button>
+          <button type="button" className={cn(iconButtonClass, "lg:hidden")} onClick={() => setMobileOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="space-y-1.5">
           {nav.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => { setPage(id); setMobileOpen(false); }} className={cn("flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition", page === id ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100 hover:text-slate-950")}>
-              <Icon className="h-4 w-4" />
+            <button type="button" key={id} onClick={() => { setPage(id); setMobileOpen(false); }} className={cn("flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition", page === id ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100 hover:text-slate-950")}>
+              <Icon className="h-4 w-4 shrink-0" />
               <span>{label}</span>
             </button>
           ))}
@@ -212,7 +216,7 @@ function Sidebar({ page, setPage, mobileOpen, setMobileOpen }) {
       <AnimatePresence>
         {mobileOpen ? <>
           <motion.div className="fixed inset-0 z-40 bg-slate-950/20 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
-          <motion.aside className="fixed inset-y-0 left-0 z-50 w-[280px] border-r border-slate-200 bg-white p-6 lg:hidden" initial={{ x: -320 }} animate={{ x: 0 }} exit={{ x: -320 }} transition={{ type: "spring", stiffness: 280, damping: 28 }}>{content}</motion.aside>
+          <motion.aside className="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[calc(100vw-1rem)] border-r border-slate-200 bg-white p-6 lg:hidden" initial={{ x: -320 }} animate={{ x: 0 }} exit={{ x: -320 }} transition={{ type: "spring", stiffness: 280, damping: 28 }}>{content}</motion.aside>
         </> : null}
       </AnimatePresence>
     </>
@@ -222,7 +226,7 @@ function Sidebar({ page, setPage, mobileOpen, setMobileOpen }) {
 function SelectField({ value, options, onChange }) {
   return (
     <div className="relative">
-      <select value={value} onChange={onChange} className="h-11 w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-900 outline-none transition focus:border-slate-400">
+      <select value={value} onChange={onChange} className="h-12 w-full cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-900 outline-none transition focus:border-slate-400">
         {options.map((option) => <option key={option}>{option}</option>)}
       </select>
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -233,9 +237,9 @@ function SelectField({ value, options, onChange }) {
 function AIPromptHero({ prompt, setPrompt, onSubmit, parsed }) {
   return (
     <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-8 xl:p-10">
-      <SectionHeading eyebrow="AI project matching" title="What do you want to build?" body="Describe the project, stack, timeline, and budget. We will parse the brief and return the developers most likely to fit." action={<div className="flex items-center gap-2"><Pill tone="green">Natural language search</Pill><Pill tone="slate">Budget-aware ranking</Pill></div>} />
+      <SectionHeading eyebrow="AI project matching" title="What do you want to build?" body="Describe the project, stack, timeline, and budget. We will parse the brief and return the developers most likely to fit." action={<div className="flex flex-wrap items-center gap-2"><Pill tone="green">Natural language search</Pill><Pill tone="slate">Budget-aware ranking</Pill></div>} />
       <div className="mt-8 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06)]"><BrainCircuit className="h-5 w-5" /></div>
           <div className="min-w-0 flex-1">
             <label className="text-sm font-semibold text-slate-900">Project brief</label>
@@ -243,9 +247,9 @@ function AIPromptHero({ prompt, setPrompt, onSubmit, parsed }) {
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="mt-4 min-h-[140px] w-full rounded-3xl border border-slate-200 bg-white px-4 py-4 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2">
-                {examplePrompts.map((item) => <button key={item} onClick={() => setPrompt(item)} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">{item.length > 54 ? `${item.slice(0, 54)}...` : item}</button>)}
+                {examplePrompts.map((item) => <button type="button" key={item} onClick={() => setPrompt(item)} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">{item.length > 54 ? `${item.slice(0, 54)}...` : item}</button>)}
               </div>
-              <button onClick={onSubmit} className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800">Find matching developers<ArrowRight className="ml-2 h-4 w-4" /></button>
+              <button type="button" onClick={onSubmit} className={cn(primaryButtonClass, "w-full px-5 py-3 sm:w-auto")}>Find matching developers<ArrowRight className="h-4 w-4 shrink-0" /></button>
             </div>
           </div>
         </div>
@@ -264,7 +268,7 @@ function MatchSummary({ parsed, count }) {
           <p className="text-sm font-semibold text-slate-900">Top matches for your brief</p>
           <p className="mt-1 text-sm text-slate-600">Parsed as a {parsed.projectType.toLowerCase()} brief with {parsed.matchedStacks.length ? parsed.matchedStacks.join(", ") : "generalist"} requirements and a budget around £{parsed.budget}.</p>
         </div>
-        <div className="flex items-center gap-2"><Pill tone="green">{count} matches ranked</Pill><Pill tone="slate">AI parse demo</Pill></div>
+        <div className="flex flex-wrap items-center gap-2"><Pill tone="green">{count} matches ranked</Pill><Pill tone="slate">AI parse demo</Pill></div>
       </div>
     </div>
   );
@@ -274,12 +278,12 @@ function SearchToolbar({ filters, setFilters, resultCount }) {
   const activeFilterCount = (filters.query ? 1 : 0) + (filters.stack !== "All stacks" ? 1 : 0) + (filters.availability !== "Any availability" ? 1 : 0) + (filters.maxRate !== 900 ? 1 : 0);
   const reset = () => setFilters({ query: "", stack: "All stacks", availability: "Any availability", maxRate: 900 });
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-5">
       <div className="flex flex-col gap-4">
-        <div className="grid gap-3 xl:grid-cols-[1.4fr_0.8fr_0.8fr_1fr]">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1fr)]">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input value={filters.query} onChange={(e) => setFilters((s) => ({ ...s, query: e.target.value }))} placeholder="Refine by keyword, stack, domain, or developer" className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+            <input value={filters.query} onChange={(e) => setFilters((s) => ({ ...s, query: e.target.value }))} placeholder="Refine by keyword, stack, domain, or developer" className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
           </div>
           <SelectField value={filters.stack} options={stackOptions} onChange={(e) => setFilters((s) => ({ ...s, stack: e.target.value }))} />
           <SelectField value={filters.availability} options={availabilityOptions} onChange={(e) => setFilters((s) => ({ ...s, availability: e.target.value }))} />
@@ -289,8 +293,8 @@ function SearchToolbar({ filters, setFilters, resultCount }) {
           </div>
         </div>
         <div className="flex flex-col gap-3 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600"><span className="font-medium text-slate-900">{resultCount} developers</span><span className="text-slate-300">•</span><span>{activeFilterCount} active filters</span></div>
-          <button onClick={reset} className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">Reset filters</button>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600"><span className="font-medium text-slate-900">{resultCount} developers</span><span className="hidden text-slate-300 sm:inline">•</span><span>{activeFilterCount} active filters</span></div>
+          <button type="button" onClick={reset} className="inline-flex items-center self-start rounded-full px-3 py-1 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 sm:self-auto">Reset filters</button>
         </div>
       </div>
     </div>
@@ -299,27 +303,27 @@ function SearchToolbar({ filters, setFilters, resultCount }) {
 
 function DeveloperCard({ developer, onOpen }) {
   return (
-    <motion.button whileHover={{ y: -2 }} onClick={() => onOpen(developer)} className="w-full rounded-[28px] border border-slate-200 bg-white p-6 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <motion.button type="button" whileHover={{ y: -2 }} onClick={() => onOpen(developer)} className="flex h-full w-full flex-col rounded-[28px] border border-slate-200 bg-white p-6 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
             <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
           </div>
           <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 sm:text-right">
           <p className="text-2xl font-semibold tracking-tight text-slate-950">£{developer.rate}</p>
           <p className="text-xs font-medium text-slate-500">{developer.bookingType}</p>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">{developer.skills.map((skill) => <Pill key={skill}>{skill}</Pill>)}</div>
-      <div className="mt-4 flex flex-col gap-2">{developer.reasons?.map((reason) => <div key={reason} className="inline-flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="h-4 w-4 text-emerald-600" /><span>{reason}</span></div>)}</div>
+      <div className="mt-4 flex flex-col gap-2">{developer.reasons?.map((reason) => <div key={reason} className="inline-flex items-start gap-2 text-sm text-slate-700"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span>{reason}</span></div>)}</div>
       <p className="mt-4 text-sm leading-7 text-slate-600">{developer.summary}</p>
       <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-        <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{developer.location}</span>
-        <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{developer.timezone}</span>
-        <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4" />{developer.rating}</span>
+        <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 shrink-0" />{developer.location}</span>
+        <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 shrink-0" />{developer.timezone}</span>
+        <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 shrink-0" />{developer.rating}</span>
       </div>
     </motion.button>
   );
@@ -340,7 +344,7 @@ function MarketplacePage({ prompt, setPrompt, filters, setFilters, submittedProm
       <section className="space-y-5">
         <SectionHeading eyebrow="Refine results" title="Filter the AI-ranked shortlist" body="Once the brief has been parsed, classic filters become the second pass. Much saner than making users do all the thinking upfront." action={<Pill tone="slate">Secondary filter layer</Pill>} />
         <SearchToolbar filters={filters} setFilters={setFilters} resultCount={ranked.length} />
-        <div className="grid gap-5 xl:grid-cols-2">{ranked.map((developer) => <DeveloperCard key={developer.id} developer={developer} onOpen={onOpen} />)}</div>
+        <div className="grid gap-5 lg:grid-cols-2">{ranked.map((developer) => <DeveloperCard key={developer.id} developer={developer} onOpen={onOpen} />)}</div>
       </section>
     </div>
   );
@@ -406,39 +410,41 @@ function ProfileModal({ developer, onClose }) {
     <AnimatePresence>
       <>
         <motion.div className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-[1px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
-        <motion.div className="fixed left-1/2 top-1/2 z-50 w-[94vw] max-w-3xl -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-7" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.98 }} transition={{ duration: 0.18 }}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex flex-wrap gap-2"><Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill><Pill>{developer.seniority}</Pill></div>
-              <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">{developer.name}</h2>
-              <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-start justify-center p-3 pt-6 sm:items-center sm:p-6">
+          <motion.div className="pointer-events-auto max-h-full w-full max-w-3xl overflow-y-auto rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-7" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.98 }} transition={{ duration: 0.18 }}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="flex flex-wrap gap-2"><Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill><Pill>{developer.seniority}</Pill></div>
+                <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">{developer.name}</h2>
+                <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+              </div>
+              <button type="button" onClick={onClose} className={cn(iconButtonClass, "self-end sm:self-start")}><X className="h-5 w-5" /></button>
             </div>
-            <button onClick={onClose} className="rounded-2xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"><X className="h-5 w-5" /></button>
-          </div>
-          <div className="mt-7 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
-            <div>
-              <p className="text-sm leading-7 text-slate-600">{developer.summary}</p>
-              <div className="mt-5 flex flex-wrap gap-2">{developer.skills.map((skill) => <Pill key={skill}>{skill}</Pill>)}</div>
-              <div className="mt-5 flex flex-col gap-2">{developer.reasons?.map((reason) => <div key={reason} className="inline-flex items-center gap-2 text-sm text-slate-700"><CheckCircle2 className="h-4 w-4 text-emerald-600" /><span>{reason}</span></div>)}</div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Location</p><p className="mt-2 text-sm font-semibold text-slate-900">{developer.location}</p></div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Timezone</p><p className="mt-2 text-sm font-semibold text-slate-900">{developer.timezone}</p></div>
+            <div className="mt-7 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
+              <div>
+                <p className="text-sm leading-7 text-slate-600">{developer.summary}</p>
+                <div className="mt-5 flex flex-wrap gap-2">{developer.skills.map((skill) => <Pill key={skill}>{skill}</Pill>)}</div>
+                <div className="mt-5 flex flex-col gap-2">{developer.reasons?.map((reason) => <div key={reason} className="inline-flex items-start gap-2 text-sm text-slate-700"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span>{reason}</span></div>)}</div>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Location</p><p className="mt-2 text-sm font-semibold text-slate-900">{developer.location}</p></div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Timezone</p><p className="mt-2 text-sm font-semibold text-slate-900">{developer.timezone}</p></div>
+                </div>
+              </div>
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-medium text-slate-500">Commercials</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">£{developer.rate}</p>
+                <p className="text-sm text-slate-500">{developer.bookingType}</p>
+                <div className="mt-5 space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between gap-4"><span>Rating</span><span className="font-semibold text-slate-900">{developer.rating}</span></div>
+                  <div className="flex items-center justify-between gap-4"><span>Experience</span><span className="font-semibold text-slate-900">{developer.years} years</span></div>
+                  <div className="flex items-center justify-between gap-4"><span>Availability</span><span className="text-right font-semibold text-slate-900">{developer.availability}</span></div>
+                </div>
+                <button type="button" className={cn(primaryButtonClass, "mt-6 w-full px-5 py-3")}>Request booking</button>
+                <button type="button" className={cn(secondaryButtonClass, "mt-3 w-full px-5 py-3")}>Shortlist developer</button>
               </div>
             </div>
-            <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-              <p className="text-sm font-medium text-slate-500">Commercials</p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">£{developer.rate}</p>
-              <p className="text-sm text-slate-500">{developer.bookingType}</p>
-              <div className="mt-5 space-y-3 text-sm text-slate-600">
-                <div className="flex items-center justify-between"><span>Rating</span><span className="font-semibold text-slate-900">{developer.rating}</span></div>
-                <div className="flex items-center justify-between"><span>Experience</span><span className="font-semibold text-slate-900">{developer.years} years</span></div>
-                <div className="flex items-center justify-between"><span>Availability</span><span className="font-semibold text-slate-900">{developer.availability}</span></div>
-              </div>
-              <button className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800">Request booking</button>
-              <button className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-900 transition hover:bg-slate-50">Shortlist developer</button>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </>
     </AnimatePresence>
   );
@@ -458,7 +464,7 @@ export default function HomePage() {
         <Sidebar page={page} setPage={setPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
         <div className="min-w-0 flex-1">
           <AppHeader setMobileOpen={setMobileOpen} />
-          <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 xl:py-8">
+          <main className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:py-8">
             {page === "marketplace" ? <MarketplacePage prompt={prompt} setPrompt={setPrompt} filters={filters} setFilters={setFilters} submittedPrompt={submittedPrompt} onGenerate={() => setSubmittedPrompt(prompt)} onOpen={setActiveDeveloper} /> : null}
             {page === "bookings" ? <BookingsPage /> : null}
             {page === "developers" ? <DevelopersPage /> : null}
