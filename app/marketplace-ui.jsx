@@ -106,6 +106,7 @@ function relativeDateValue(days) {
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300";
 const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200";
 const iconButtonClass = "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200";
+const selectInputClass = "h-12 w-full cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-14 text-sm font-medium text-slate-900 outline-none transition focus:border-slate-400";
 
 function parsePrompt(prompt) {
   const lower = prompt.toLowerCase();
@@ -306,15 +307,39 @@ export function AppShell({ page, onSelectPage, mobileOpen, setMobileOpen, mainCl
   );
 }
 
-function SelectField({ value, options, onChange }) {
+function useLockBodyScroll(active) {
+  useEffect(() => {
+    if (!active) return undefined;
+
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, [active]);
+}
+
+function NativeSelect({ id, value, options, onChange, className }) {
   return (
     <div className="relative">
-      <select value={value} onChange={onChange} className="h-12 w-full cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium text-slate-900 outline-none transition focus:border-slate-400">
-        {options.map((option) => <option key={option}>{option}</option>)}
+      <select id={id} value={value} onChange={onChange} className={cn(selectInputClass, className)}>
+        {options.map((option) => {
+          if (typeof option === "string") return <option key={option}>{option}</option>;
+          return <option key={option.value} value={option.value}>{option.label}</option>;
+        })}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+      <ChevronDown className="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
     </div>
   );
+}
+
+function SelectField({ value, options, onChange }) {
+  return <NativeSelect value={value} options={options} onChange={onChange} />;
 }
 
 function PromptIdeaCard({ label, description, prompt, onSelect }) {
@@ -709,6 +734,8 @@ export function ShortlistReviewModal({ open, developers: shortlistedDevelopers, 
 }
 
 export function BookingFlowModal({ developer, prompt, onClose, onSubmit }) {
+  useLockBodyScroll(Boolean(developer));
+
   const [form, setForm] = useState({
     clientName: "New client",
     engagementType: "Sprint",
@@ -801,12 +828,7 @@ export function BookingFlowModal({ developer, prompt, onClose, onSubmit }) {
                   </div>
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="engagement-type">Engagement</label>
-                    <select id="engagement-type" value={form.engagementType} onChange={(e) => handleChange("engagementType", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
-                      <option>Sprint</option>
-                      <option>Trial</option>
-                      <option>Fractional</option>
-                      <option>Retained</option>
-                    </select>
+                    <NativeSelect id="engagement-type" value={form.engagementType} onChange={(e) => handleChange("engagementType", e.target.value)} options={["Sprint", "Trial", "Fractional", "Retained"]} className="mt-3" />
                   </div>
                 </div>
 
@@ -824,21 +846,11 @@ export function BookingFlowModal({ developer, prompt, onClose, onSubmit }) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="days-per-week">Days per week</label>
-                    <select id="days-per-week" value={form.daysPerWeek} onChange={(e) => handleChange("daysPerWeek", Number(e.target.value))} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
-                      <option value={1}>1 day</option>
-                      <option value={2}>2 days</option>
-                      <option value={3}>3 days</option>
-                      <option value={4}>4 days</option>
-                      <option value={5}>5 days</option>
-                    </select>
+                    <NativeSelect id="days-per-week" value={form.daysPerWeek} onChange={(e) => handleChange("daysPerWeek", Number(e.target.value))} options={[{ value: 1, label: "1 day" }, { value: 2, label: "2 days" }, { value: 3, label: "3 days" }, { value: 4, label: "4 days" }, { value: 5, label: "5 days" }]} className="mt-3" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="kickoff-window">Kickoff preference</label>
-                    <select id="kickoff-window" value={form.kickoff} onChange={(e) => handleChange("kickoff", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
-                      <option>Flexible within window</option>
-                      <option>Start on selected date</option>
-                      <option>Need confirmation this week</option>
-                    </select>
+                    <NativeSelect id="kickoff-window" value={form.kickoff} onChange={(e) => handleChange("kickoff", e.target.value)} options={["Flexible within window", "Start on selected date", "Need confirmation this week"]} className="mt-3" />
                   </div>
                 </div>
 
