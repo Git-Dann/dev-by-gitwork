@@ -62,9 +62,45 @@ const promptIdeas = [
 ];
 
 const defaultBookings = [
-  { id: "acme-amara", client: "Acme SaaS", developer: "Amara Singh", stack: "React + Node.js", dates: "17 Mar to 28 Mar", status: "Confirmed", value: "£6,500" },
-  { id: "northstar-priya", client: "Northstar Health", developer: "Priya Raman", stack: "Python + AWS", dates: "19 Mar to 2 Apr", status: "Pending", value: "£7,840" },
-  { id: "orbit-ella", client: "Orbit Commerce", developer: "Ella Morgan", stack: "Next.js + Node.js", dates: "24 Mar to 4 Apr", status: "Shortlisted", value: "£5,900" }
+  {
+    id: "acme-amara",
+    client: "Acme SaaS",
+    developer: "Amara Singh",
+    stack: "React + Node.js",
+    dates: "17 Mar to 28 Mar",
+    status: "Confirmed",
+    value: "£6,500",
+    engagementType: "Sprint",
+    daysPerWeek: 5,
+    nextStep: "Kickoff pack sent to client and developer.",
+    summary: "Internal operations dashboard build with a confirmed kickoff and delivery window."
+  },
+  {
+    id: "northstar-priya",
+    client: "Northstar Health",
+    developer: "Priya Raman",
+    stack: "Python + AWS",
+    dates: "19 Mar to 2 Apr",
+    status: "Pending",
+    value: "£7,840",
+    engagementType: "Retained",
+    daysPerWeek: 4,
+    nextStep: "Waiting on client sign-off after final scope review.",
+    summary: "Backend and platform support for a healthcare workflow rollout."
+  },
+  {
+    id: "orbit-ella",
+    client: "Orbit Commerce",
+    developer: "Ella Morgan",
+    stack: "Next.js + Node.js",
+    dates: "24 Mar to 4 Apr",
+    status: "Shortlisted",
+    value: "£5,900",
+    engagementType: "Trial",
+    daysPerWeek: 3,
+    nextStep: "Hold candidate while client reviews two final options.",
+    summary: "Commerce sprint being narrowed from shortlist into a final booking decision."
+  }
 ];
 
 function cn(...parts) { return parts.filter(Boolean).join(" "); }
@@ -75,6 +111,11 @@ function formatCurrency(value) {
     currency: "GBP",
     maximumFractionDigits: 0
   }).format(value);
+}
+
+function parseCurrencyValue(value) {
+  if (typeof value === "number") return value;
+  return Number(String(value).replace(/[^\d.-]/g, "")) || 0;
 }
 
 function parseDateInput(value) {
@@ -184,6 +225,7 @@ function Pill({ children, tone = "default" }) {
   const styles = {
     default: "bg-white text-slate-600 border-slate-200",
     green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
     slate: "bg-slate-50 text-slate-700 border-slate-200",
     dark: "bg-slate-900 text-white border-slate-900"
   };
@@ -236,9 +278,6 @@ function AppHeader({ setMobileOpen, shortlistCount = 0, onOpenShortlist }) {
               <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">{shortlistCount}</span>
             </button>
           ) : null}
-          <div className="hidden items-center gap-3 md:flex">
-            <button type="button" className={primaryButtonClass}>Post requirement</button>
-          </div>
         </div>
       </div>
     </header>
@@ -590,17 +629,150 @@ function DeveloperCard({ developer, isShortlisted, onOpen, onToggleShortlist, on
 
 export function BookingsPage({ requests = [] }) {
   const bookings = [...requests, ...defaultBookings];
+  const confirmedValue = bookings
+    .filter((item) => item.status === "Confirmed")
+    .reduce((total, item) => total + parseCurrencyValue(item.value), 0);
+  const openQueue = bookings.filter((item) => item.status !== "Confirmed").length;
+  const requestedCount = bookings.filter((item) => item.status === "Requested").length;
+  const averageBookingValue = bookings.length
+    ? Math.round(bookings.reduce((total, item) => total + parseCurrencyValue(item.value), 0) / bookings.length)
+    : 0;
+  const statusSections = [
+    {
+      status: "Requested",
+      title: "Fresh requests",
+      description: "New requests coming out of shortlist and waiting for ops review."
+    },
+    {
+      status: "Pending",
+      title: "In review",
+      description: "Commercial or scheduling details still being confirmed."
+    },
+    {
+      status: "Confirmed",
+      title: "Confirmed work",
+      description: "Booked engagements ready for kickoff and delivery."
+    },
+    {
+      status: "Shortlisted",
+      title: "Held in reserve",
+      description: "Candidates or scopes being held while the client decides."
+    }
+  ];
+  const urgentItems = bookings.filter((item) => item.status === "Requested" || item.status === "Pending");
+  const getStatusTone = (status) => {
+    if (status === "Confirmed") return "green";
+    if (status === "Pending") return "amber";
+    if (status === "Requested") return "dark";
+    return "slate";
+  };
+
   return (
     <div className="space-y-6">
-      <SectionHeading eyebrow="Bookings" title="Track requests, confirms, and engagement value" body="This area is for booking requests, contract windows, extensions, and delivery status." />
+      <SectionHeading eyebrow="Bookings" title="Run booking ops across requests, holds, and confirmed work" body="This should behave like an internal operations board: new requests, commercial review, confirmed starts, and any work still sitting in holding patterns." />
       {requests.length ? (
         <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <p className="text-sm font-semibold text-emerald-900">Latest booking request sent</p>
           <p className="mt-2 text-sm leading-6 text-emerald-800">New booking requests now land here so ops can review dates, budgets, and project timing in one queue.</p>
         </div>
       ) : null}
-      <div className="grid gap-4">
-        {bookings.map((item) => <div key={`${item.id ?? item.client}-${item.developer}`} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><h3 className="text-lg font-semibold tracking-tight text-slate-950">{item.client} to {item.developer}</h3><p className="mt-1 text-sm text-slate-600">{item.stack} · {item.dates}</p></div><div className="flex flex-wrap items-center gap-3"><Pill tone={item.status === "Confirmed" || item.status === "Requested" ? "green" : "slate"}>{item.status}</Pill><span className="text-sm font-semibold text-slate-900">{item.value}</span></div></div></div>)}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Open queue" value={String(openQueue)} hint="Requests, pending reviews, and held work" icon={Clock3} />
+        <StatCard label="Confirmed value" value={formatCurrency(confirmedValue)} hint="Signed or verbally approved work" icon={PoundSterling} />
+        <StatCard label="Fresh requests" value={String(requestedCount)} hint="Needs ops review and response" icon={CalendarDays} />
+        <StatCard label="Average booking" value={formatCurrency(averageBookingValue)} hint="Average value across tracked items" icon={LayoutDashboard} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-5">
+          {statusSections.map((section) => {
+            const items = bookings.filter((item) => item.status === section.status);
+            if (!items.length) return null;
+
+            return (
+              <section key={section.status} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">{section.status}</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{section.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{section.description}</p>
+                  </div>
+                  <Pill tone={getStatusTone(section.status)}>{items.length}</Pill>
+                </div>
+
+                <div className="mt-5 space-y-4">
+                  {items.map((item) => (
+                    <div key={`${item.id ?? item.client}-${item.developer}`} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-xl font-semibold tracking-tight text-slate-950">{item.client} to {item.developer}</h4>
+                            <Pill tone={getStatusTone(item.status)}>{item.status}</Pill>
+                          </div>
+                          <p className="mt-2 text-sm font-medium text-slate-600">{item.stack} · {item.dates}</p>
+                          <p className="mt-4 text-sm leading-6 text-slate-600">{item.goals || item.summary || "Booking context to fill in from the brief and commercial handoff."}</p>
+                        </div>
+                        <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-3 lg:min-w-[180px] lg:text-right">
+                          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Value</p>
+                          <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{item.value}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Engagement</p>
+                          <p className="mt-2 text-sm font-semibold text-slate-900">{item.engagementType || "Sprint"}</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Cadence</p>
+                          <p className="mt-2 text-sm font-semibold text-slate-900">{item.daysPerWeek ? `${item.daysPerWeek} days/week` : "Full week"}</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:col-span-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Next step</p>
+                          <p className="mt-2 text-sm font-semibold text-slate-900">{item.nextStep || item.notes || "Review with ops and confirm the next commercial step."}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <div className="space-y-4 xl:sticky xl:top-24">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Needs attention</p>
+            <div className="mt-5 space-y-3">
+              {urgentItems.length ? urgentItems.map((item) => (
+                <div key={`attention-${item.id ?? item.client}`} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900">{item.client}</p>
+                      <p className="mt-1 text-sm text-slate-500">{item.developer}</p>
+                    </div>
+                    <Pill tone={getStatusTone(item.status)}>{item.status}</Pill>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{item.nextStep || item.notes || "Review and move this booking forward."}</p>
+                </div>
+              )) : (
+                <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Queue is clear</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">No requested or pending bookings need immediate ops attention right now.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Booking flow</p>
+            <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
+              <li>Shortlist produces the first booking request with dates, cadence, and budget context.</li>
+              <li>Ops reviews scope and commercials, then moves the item through requested, pending, or confirmed.</li>
+              <li>Confirmed work becomes the live delivery queue instead of disappearing into a flat list.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
