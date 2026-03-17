@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
-  BrainCircuit,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -255,23 +254,6 @@ function SelectField({ value, options, onChange }) {
   );
 }
 
-function BriefSignal({ icon: Icon, label, value, note }) {
-  return (
-    <div className="rounded-[22px] border border-white/80 bg-white/82 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)]">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{label}</p>
-          <p className="mt-2 text-sm font-semibold text-slate-950 sm:text-[15px]">{value}</p>
-          <p className="mt-1 text-sm leading-6 text-slate-500">{note}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function PromptIdeaCard({ label, description, prompt, onSelect }) {
   return (
     <button type="button" onClick={() => onSelect(prompt)} className="group w-full rounded-[24px] border border-white/80 bg-white/82 p-4 text-left shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
@@ -288,40 +270,12 @@ function PromptIdeaCard({ label, description, prompt, onSelect }) {
   );
 }
 
-function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
-  const stackSignal = liveParsed.matchedStacks.length ? liveParsed.matchedStacks.join(" + ") : "Generalist stack";
-  const availabilitySignal = liveParsed.availability === "Any availability" ? "Flexible start" : liveParsed.availability;
+function AIPromptHero({ prompt, setPrompt, onSubmit }) {
   const promptWordCount = prompt.trim() ? prompt.trim().split(/\s+/).length : 0;
   const leadPoints = [
     { label: "Less setup", value: "Describe the product once instead of stitching filters together." },
     { label: "Live structure", value: "Stack, budget, and timing become usable signals while the brief is still being written." },
     { label: "Sharper matching", value: "Shortlists start ranked before the client ever touches the refinement layer." }
-  ];
-  const signals = [
-    {
-      icon: LayoutDashboard,
-      label: "Project type",
-      value: liveParsed.projectType,
-      note: liveParsed.duration ? `${liveParsed.duration} delivery window detected.` : "Add a delivery window to tighten the shortlist."
-    },
-    {
-      icon: Code2,
-      label: "Stack signal",
-      value: stackSignal,
-      note: liveParsed.matchedStacks.length ? `${liveParsed.matchedStacks.length} technical cue${liveParsed.matchedStacks.length > 1 ? "s" : ""} pulled from the brief.` : "Mention frameworks or platforms directly for more precise ranking."
-    },
-    {
-      icon: PoundSterling,
-      label: "Budget guardrail",
-      value: `Up to £${liveParsed.budget}`,
-      note: "Used to keep the shortlist commercially realistic before filtering."
-    },
-    {
-      icon: CalendarDays,
-      label: "Start window",
-      value: availabilitySignal,
-      note: liveParsed.availability === "Any availability" ? "Add urgency if availability should influence ranking harder." : "Timing pressure is now part of the scoring pass."
-    }
   ];
 
   return (
@@ -329,57 +283,40 @@ function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_32%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.08),transparent_30%)]" />
       <div className="relative">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_360px] xl:items-start">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/72 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
-              Live brief composer
-            </div>
-            <h1 className="mt-6 max-w-4xl font-[family:var(--font-sora)] text-4xl font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950 sm:text-5xl xl:text-[5.1rem]">
-              Write the brief once. Get a sharper shortlist back.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {leadPoints.map((item) => (
-                <div key={item.label} className="border-l border-slate-300/70 pl-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
-                  <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
-                </div>
-              ))}
-            </div>
+        <div className="max-w-5xl">
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/72 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
+            Live brief composer
           </div>
-
-          <div className="rounded-[30px] border border-white/80 bg-white/76 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Intent map</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">Signals update as the brief changes, so the shortlist starts structured before filters kick in.</p>
+          <h1 className="mt-6 max-w-4xl font-[family:var(--font-sora)] text-4xl font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950 sm:text-5xl xl:text-[5.1rem]">
+            Write the brief once. Get a sharper shortlist back.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+            Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {leadPoints.map((item) => (
+              <div key={item.label} className="border-l border-slate-300/70 pl-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]">
-                <BrainCircuit className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-5 grid gap-3">
-              {signals.map((signal) => <BriefSignal key={signal.label} {...signal} />)}
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-8 max-w-5xl">
           <div className="rounded-[32px] border border-white/80 bg-white/70 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
             <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="flex flex-col gap-4">
                 <div className="min-w-0 max-w-2xl">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Project brief</p>
                   <h2 className="mt-3 font-[family:var(--font-sora)] text-[1.7rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2rem]">
                     Describe the build in two or three clear sentences.
                   </h2>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+                    Keep it simple. Stack, timeline, budget, and the kind of product you need are enough.
+                  </p>
                 </div>
-                <p className="max-w-sm text-sm leading-6 text-slate-500">
-                  Keep it simple. Stack, timeline, budget, and the kind of product you need are enough.
-                </p>
               </div>
 
               <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(15,23,42,0.04)] sm:p-5">
@@ -400,15 +337,17 @@ function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="px-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Starting points</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Not templates. Just enough structure to get moving faster.</p>
+              <div className="border-t border-slate-100 pt-2">
+                <div className="px-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Starting points</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Not templates. Just enough structure to get moving faster.</p>
+                </div>
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                  {promptIdeas.map((item) => <PromptIdeaCard key={item.id} {...item} onSelect={setPrompt} />)}
+                </div>
+              </div>
             </div>
-            {promptIdeas.map((item) => <PromptIdeaCard key={item.id} {...item} onSelect={setPrompt} />)}
           </div>
         </div>
       </div>
@@ -487,11 +426,10 @@ function DeveloperCard({ developer, onOpen }) {
 }
 
 function MarketplacePage({ prompt, setPrompt, filters, setFilters, submittedPrompt, onGenerate, onOpen }) {
-  const liveParsed = useMemo(() => parsePrompt(prompt), [prompt]);
   const { parsed, ranked } = useMemo(() => rankDevelopers(submittedPrompt || prompt, filters), [submittedPrompt, prompt, filters]);
   return (
     <div className="space-y-8">
-      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} liveParsed={liveParsed} />
+      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Developer pool" value="1,000+" hint="Frontend, backend, mobile, AI, DevOps" icon={Users} />
         <StatCard label="Average fill time" value="48h" hint="For common stacks and shortlists" icon={Clock3} />
