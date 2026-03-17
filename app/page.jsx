@@ -42,6 +42,27 @@ const examplePrompts = [
   "Need a mobile developer for a React Native app MVP over 3 months."
 ];
 
+const promptIdeas = [
+  {
+    id: "internal-systems",
+    label: "Internal systems",
+    description: "Senior React + Node team for a 6-week dashboard sprint with clear budget control.",
+    prompt: examplePrompts[0]
+  },
+  {
+    id: "ai-workflow",
+    label: "AI workflow",
+    description: "Python engineer for FastAPI, retrieval, and production AI delivery instead of a prototype.",
+    prompt: examplePrompts[1]
+  },
+  {
+    id: "mobile-mvp",
+    label: "Mobile MVP",
+    description: "React Native product push with enough runway to ship, test, and iterate in market.",
+    prompt: examplePrompts[2]
+  }
+];
+
 function cn(...parts) { return parts.filter(Boolean).join(" "); }
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300";
@@ -234,27 +255,167 @@ function SelectField({ value, options, onChange }) {
   );
 }
 
-function AIPromptHero({ prompt, setPrompt, onSubmit, parsed }) {
+function BriefSignal({ icon: Icon, label, value, note }) {
   return (
-    <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-8 xl:p-10">
-      <SectionHeading eyebrow="AI project matching" title="What do you want to build?" body="Describe the project, stack, timeline, and budget. We will parse the brief and return the developers most likely to fit." action={<div className="flex flex-wrap items-center gap-2"><Pill tone="green">Natural language search</Pill><Pill tone="slate">Budget-aware ranking</Pill></div>} />
-      <div className="mt-8 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06)]"><BrainCircuit className="h-5 w-5" /></div>
-          <div className="min-w-0 flex-1">
-            <label className="text-sm font-semibold text-slate-900">Project brief</label>
-            <p className="mt-1 text-sm text-slate-500">Try a plain-English brief, not a filter salad. The machine can cope.</p>
-            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="mt-4 min-h-[140px] w-full rounded-3xl border border-slate-200 bg-white px-4 py-4 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-2">
-                {examplePrompts.map((item) => <button type="button" key={item} onClick={() => setPrompt(item)} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-left text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900">{item.length > 54 ? `${item.slice(0, 54)}...` : item}</button>)}
+    <div className="rounded-[22px] border border-white/80 bg-white/82 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{label}</p>
+          <p className="mt-2 text-sm font-semibold text-slate-950 sm:text-[15px]">{value}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-500">{note}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PromptIdeaCard({ label, description, prompt, onSelect }) {
+  return (
+    <button type="button" onClick={() => onSelect(prompt)} className="group w-full rounded-[24px] border border-white/80 bg-white/82 p-4 text-left shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-[0_16px_40px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{label}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{description}</p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 transition group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AIPromptHero({ prompt, setPrompt, onSubmit, liveParsed }) {
+  const stackSignal = liveParsed.matchedStacks.length ? liveParsed.matchedStacks.join(" + ") : "Generalist stack";
+  const availabilitySignal = liveParsed.availability === "Any availability" ? "Flexible start" : liveParsed.availability;
+  const leadPoints = [
+    { label: "Less setup", value: "Describe the product once instead of stitching filters together." },
+    { label: "Live structure", value: "Stack, budget, and timing become usable signals while the brief is still being written." },
+    { label: "Sharper matching", value: "Shortlists start ranked before the client ever touches the refinement layer." }
+  ];
+  const signals = [
+    {
+      icon: LayoutDashboard,
+      label: "Project type",
+      value: liveParsed.projectType,
+      note: liveParsed.duration ? `${liveParsed.duration} delivery window detected.` : "Add a delivery window to tighten the shortlist."
+    },
+    {
+      icon: Code2,
+      label: "Stack signal",
+      value: stackSignal,
+      note: liveParsed.matchedStacks.length ? `${liveParsed.matchedStacks.length} technical cue${liveParsed.matchedStacks.length > 1 ? "s" : ""} pulled from the brief.` : "Mention frameworks or platforms directly for more precise ranking."
+    },
+    {
+      icon: PoundSterling,
+      label: "Budget guardrail",
+      value: `Up to £${liveParsed.budget}`,
+      note: "Used to keep the shortlist commercially realistic before filtering."
+    },
+    {
+      icon: CalendarDays,
+      label: "Start window",
+      value: availabilitySignal,
+      note: liveParsed.availability === "Any availability" ? "Add urgency if availability should influence ranking harder." : "Timing pressure is now part of the scoring pass."
+    }
+  ];
+
+  return (
+    <section className="relative overflow-hidden rounded-[36px] border border-white/80 bg-[linear-gradient(135deg,#fbfaf5_0%,#f6f0e7_38%,#edf2eb_100%)] p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] sm:p-8 xl:p-10">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_32%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.08),transparent_30%)]" />
+      <div className="relative">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.25fr)_360px] xl:items-start">
+          <div className="max-w-4xl">
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/72 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
+              Live brief composer
+            </div>
+            <h1 className="mt-6 max-w-4xl font-[family:var(--font-sora)] text-4xl font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950 sm:text-5xl xl:text-[5.1rem]">
+              Write the brief once. Get a sharper shortlist back.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+              Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              {leadPoints.map((item) => (
+                <div key={item.label} className="border-l border-slate-300/70 pl-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[30px] border border-white/80 bg-white/76 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Intent map</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Signals update as the brief changes, so the shortlist starts structured before filters kick in.</p>
               </div>
-              <button type="button" onClick={onSubmit} className={cn(primaryButtonClass, "w-full px-5 py-3 sm:w-auto")}>Find matching developers<ArrowRight className="h-4 w-4 shrink-0" /></button>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]">
+                <BrainCircuit className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {signals.map((signal) => <BriefSignal key={signal.label} {...signal} />)}
             </div>
           </div>
         </div>
+
+        <div className="mt-8 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="rounded-[32px] border border-white/80 bg-white/76 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur sm:p-5">
+            <div className="flex flex-col gap-5">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] bg-slate-950 text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]">
+                  <BrainCircuit className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-950">Project brief</p>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    Use a couple of natural sentences. Mention stack, timing, budget, and what kind of product you need to ship.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200/80 bg-[#f8f7f2] p-3 sm:p-4">
+                <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="We need a senior React and Node developer to build an internal dashboard for a logistics team over 6 weeks. Budget is around £650 a day." className="min-h-[190px] w-full bg-transparent text-[17px] leading-8 text-slate-900 outline-none transition placeholder:text-slate-400" />
+              </div>
+
+              <div className="flex flex-col gap-4 border-t border-slate-200/80 pt-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="grid gap-2 text-sm text-slate-500">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />
+                    Plain-English parsing replaces manual filter setup.
+                  </div>
+                  <div className="inline-flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    Budget and timing are scored before the shortlist renders.
+                  </div>
+                </div>
+
+                <button type="button" onClick={onSubmit} className="group inline-flex w-full items-center justify-between rounded-[24px] bg-slate-950 px-5 py-4 text-left text-sm font-semibold text-white shadow-[0_16px_32px_rgba(15,23,42,0.18)] transition hover:bg-slate-900 sm:w-auto sm:min-w-[280px]">
+                  <span>Find matching developers</span>
+                  <span className="ml-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition group-hover:translate-x-1">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Starting points</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Not templates. Just enough structure to get moving faster.</p>
+            </div>
+            {promptIdeas.map((item) => <PromptIdeaCard key={item.id} {...item} onSelect={setPrompt} />)}
+          </div>
+        </div>
       </div>
-      {parsed ? <div className="mt-6 flex flex-wrap gap-2"><Pill tone="dark">{parsed.projectType}</Pill>{parsed.matchedStacks.map((s) => <Pill key={s}>{s}</Pill>)}{parsed.seniority !== "Any" ? <Pill>{parsed.seniority}</Pill> : null}{parsed.duration ? <Pill>{parsed.duration}</Pill> : null}{parsed.availability !== "Any availability" ? <Pill>{parsed.availability}</Pill> : null}<Pill>Up to £{parsed.budget}</Pill></div> : null}
     </section>
   );
 }
@@ -330,10 +491,11 @@ function DeveloperCard({ developer, onOpen }) {
 }
 
 function MarketplacePage({ prompt, setPrompt, filters, setFilters, submittedPrompt, onGenerate, onOpen }) {
+  const liveParsed = useMemo(() => parsePrompt(prompt), [prompt]);
   const { parsed, ranked } = useMemo(() => rankDevelopers(submittedPrompt || prompt, filters), [submittedPrompt, prompt, filters]);
   return (
     <div className="space-y-8">
-      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} parsed={submittedPrompt ? parsed : null} />
+      <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} liveParsed={liveParsed} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Developer pool" value="1,000+" hint="Frontend, backend, mobile, AI, DevOps" icon={Users} />
         <StatCard label="Average fill time" value="48h" hint="For common stacks and shortlists" icon={Clock3} />
