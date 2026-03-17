@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -21,7 +21,7 @@ import {
   X,
 } from "lucide-react";
 
-const developers = [
+export const developers = [
   { id: 1, name: "Amara Singh", role: "Senior Full Stack Developer", location: "London, UK", timezone: "GMT", availability: "Available next week", seniority: "Senior", rate: 650, bookingType: "Day rate", rating: 4.9, years: 9, skills: ["React", "Node.js", "TypeScript", "PostgreSQL"], domains: ["SaaS", "Internal Tools", "Operations"], summary: "Strong product engineer for SaaS platforms, internal tools, and fast-moving startups." },
   { id: 2, name: "Mateo Alvarez", role: "Frontend Developer", location: "Madrid, ES", timezone: "CET", availability: "Available in 3 days", seniority: "Midweight", rate: 420, bookingType: "Day rate", rating: 4.7, years: 6, skills: ["Vue", "Nuxt", "Tailwind", "JavaScript"], domains: ["Marketing Sites", "Design Systems", "Startups"], summary: "Frontend specialist focused on polished interfaces, component systems, and fast delivery." },
   { id: 3, name: "Priya Raman", role: "Backend Engineer", location: "Bangalore, IN", timezone: "IST", availability: "Available tomorrow", seniority: "Senior", rate: 560, bookingType: "Day rate", rating: 4.8, years: 8, skills: ["Python", "Django", "AWS", "PostgreSQL"], domains: ["APIs", "Data Systems", "Scale-ups"], summary: "Builds APIs, data-heavy systems, and robust backend services for scale-ups." },
@@ -61,7 +61,47 @@ const promptIdeas = [
   }
 ];
 
+const defaultBookings = [
+  { id: "acme-amara", client: "Acme SaaS", developer: "Amara Singh", stack: "React + Node.js", dates: "17 Mar to 28 Mar", status: "Confirmed", value: "£6,500" },
+  { id: "northstar-priya", client: "Northstar Health", developer: "Priya Raman", stack: "Python + AWS", dates: "19 Mar to 2 Apr", status: "Pending", value: "£7,840" },
+  { id: "orbit-ella", client: "Orbit Commerce", developer: "Ella Morgan", stack: "Next.js + Node.js", dates: "24 Mar to 4 Apr", status: "Shortlisted", value: "£5,900" }
+];
+
 function cn(...parts) { return parts.filter(Boolean).join(" "); }
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+function parseDateInput(value) {
+  return value ? new Date(`${value}T12:00:00`) : null;
+}
+
+function formatDateWindow(startDate, endDate) {
+  if (!startDate || !endDate) return "Dates to confirm";
+  const formatter = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+  return `${formatter.format(parseDateInput(startDate))} to ${formatter.format(parseDateInput(endDate))}`;
+}
+
+function estimateBookingDays(startDate, endDate, daysPerWeek) {
+  if (!startDate || !endDate) return 0;
+  const start = parseDateInput(startDate);
+  const end = parseDateInput(endDate);
+  const diff = end.getTime() - start.getTime();
+  if (Number.isNaN(diff) || diff < 0) return 0;
+  const weeks = Math.max(1, Math.ceil((diff + 86400000) / (1000 * 60 * 60 * 24 * 7)));
+  return weeks * Number(daysPerWeek || 1);
+}
+
+function relativeDateValue(days) {
+  const value = new Date();
+  value.setDate(value.getDate() + days);
+  return value.toISOString().slice(0, 10);
+}
 
 const primaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300";
 const secondaryButtonClass = "inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200";
@@ -443,24 +483,110 @@ export function MarketplaceLanding({ prompt, setPrompt, onGenerate }) {
   );
 }
 
-export function MarketplaceResults({ prompt, filters, setFilters, onOpen }) {
+function ShortlistRail({ developers: shortlistedDevelopers, onReviewShortlist, onToggleShortlist, onRequestBooking }) {
+  const averageRate = shortlistedDevelopers.length ? Math.round(shortlistedDevelopers.reduce((total, developer) => total + developer.rate, 0) / shortlistedDevelopers.length) : 0;
+
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:sticky xl:top-24">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Shortlist</p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Review like a cart</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Save candidates, compare fit, and come back later with message notes or booking requests.</p>
+        </div>
+        <Pill tone={shortlistedDevelopers.length ? "green" : "slate"}>{shortlistedDevelopers.length}</Pill>
+      </div>
+
+      {shortlistedDevelopers.length ? (
+        <>
+          <div className="mt-6 space-y-3">
+            {shortlistedDevelopers.map((developer) => (
+              <div key={developer.id} className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">{developer.name}</p>
+                    <p className="mt-1 text-sm text-slate-500">{developer.role}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-900">{formatCurrency(developer.rate)}</p>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
+                  <Pill>{developer.skills[0]}</Pill>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "flex-1 rounded-full px-3 py-2 text-xs")}>
+                    Request booking
+                  </button>
+                  <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(secondaryButtonClass, "rounded-full px-3 py-2 text-xs")}>
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-[24px] bg-slate-950 p-4 text-white">
+            <p className="text-sm font-semibold">{shortlistedDevelopers.length} developers saved</p>
+            <p className="mt-2 text-sm text-white/72">Average day rate {formatCurrency(averageRate)}. Keep this list warm for outreach or move directly into a booking request.</p>
+          </div>
+
+          <button type="button" onClick={onReviewShortlist} className={cn(primaryButtonClass, "mt-4 w-full rounded-full px-4 py-3")}>
+            Review shortlist
+          </button>
+        </>
+      ) : (
+        <div className="mt-6 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5">
+          <p className="text-sm font-semibold text-slate-900">Nothing saved yet</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Shortlist developers from the ranked results. The review step is where message notes and booking decisions can happen later.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MarketplaceResults({
+  prompt,
+  filters,
+  setFilters,
+  onOpen,
+  shortlistIds,
+  shortlistedDevelopers,
+  onToggleShortlist,
+  onReviewShortlist,
+  onRequestBooking
+}) {
   const { parsed, ranked } = useMemo(() => rankDevelopers(prompt, filters), [prompt, filters]);
   return (
     <div className="space-y-6">
       <MatchSummary parsed={parsed} count={ranked.length} />
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
         <ResultsFilterSidebar parsed={parsed} filters={filters} setFilters={setFilters} resultCount={ranked.length} />
         <div className="grid gap-5 lg:grid-cols-2">
-          {ranked.map((developer) => <DeveloperCard key={developer.id} developer={developer} onOpen={onOpen} />)}
+          {ranked.map((developer) => (
+            <DeveloperCard
+              key={developer.id}
+              developer={developer}
+              isShortlisted={shortlistIds.includes(developer.id)}
+              onOpen={onOpen}
+              onToggleShortlist={onToggleShortlist}
+              onRequestBooking={onRequestBooking}
+            />
+          ))}
         </div>
+        <ShortlistRail
+          developers={shortlistedDevelopers}
+          onReviewShortlist={onReviewShortlist}
+          onToggleShortlist={onToggleShortlist}
+          onRequestBooking={onRequestBooking}
+        />
       </div>
     </div>
   );
 }
 
-function DeveloperCard({ developer, onOpen }) {
+function DeveloperCard({ developer, isShortlisted, onOpen, onToggleShortlist, onRequestBooking }) {
   return (
-    <motion.button type="button" whileHover={{ y: -2 }} onClick={() => onOpen(developer)} className="flex h-full w-full flex-col rounded-[28px] border border-slate-200 bg-white p-6 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+    <motion.div whileHover={{ y: -2 }} className="flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-6 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -482,21 +608,34 @@ function DeveloperCard({ developer, onOpen }) {
         <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 shrink-0" />{developer.timezone}</span>
         <span className="inline-flex items-center gap-1.5"><Star className="h-4 w-4 shrink-0" />{developer.rating}</span>
       </div>
-    </motion.button>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button type="button" onClick={() => onOpen(developer)} className={cn(secondaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
+          View profile
+        </button>
+        <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(isShortlisted ? primaryButtonClass : secondaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
+          {isShortlisted ? "Shortlisted" : "Add to shortlist"}
+        </button>
+        <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "flex-1 rounded-full px-4 py-3")}>
+          Request booking
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
-export function BookingsPage() {
-  const bookings = [
-    { client: "Acme SaaS", developer: "Amara Singh", stack: "React + Node.js", dates: "17 Mar to 28 Mar", status: "Confirmed", value: "£6,500" },
-    { client: "Northstar Health", developer: "Priya Raman", stack: "Python + AWS", dates: "19 Mar to 2 Apr", status: "Pending", value: "£7,840" },
-    { client: "Orbit Commerce", developer: "Ella Morgan", stack: "Next.js + Node.js", dates: "24 Mar to 4 Apr", status: "Shortlisted", value: "£5,900" }
-  ];
+export function BookingsPage({ requests = [] }) {
+  const bookings = [...requests, ...defaultBookings];
   return (
     <div className="space-y-6">
       <SectionHeading eyebrow="Bookings" title="Track requests, confirms, and engagement value" body="This area is for booking requests, contract windows, extensions, and delivery status." />
+      {requests.length ? (
+        <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <p className="text-sm font-semibold text-emerald-900">Latest booking request sent</p>
+          <p className="mt-2 text-sm leading-6 text-emerald-800">New booking requests now land here so ops can review dates, budgets, and project timing in one queue.</p>
+        </div>
+      ) : null}
       <div className="grid gap-4">
-        {bookings.map((item) => <div key={`${item.client}-${item.developer}`} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><h3 className="text-lg font-semibold tracking-tight text-slate-950">{item.client} to {item.developer}</h3><p className="mt-1 text-sm text-slate-600">{item.stack} · {item.dates}</p></div><div className="flex flex-wrap items-center gap-3"><Pill tone={item.status === "Confirmed" ? "green" : "slate"}>{item.status}</Pill><span className="text-sm font-semibold text-slate-900">{item.value}</span></div></div></div>)}
+        {bookings.map((item) => <div key={`${item.id ?? item.client}-${item.developer}`} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><h3 className="text-lg font-semibold tracking-tight text-slate-950">{item.client} to {item.developer}</h3><p className="mt-1 text-sm text-slate-600">{item.stack} · {item.dates}</p></div><div className="flex flex-wrap items-center gap-3"><Pill tone={item.status === "Confirmed" || item.status === "Requested" ? "green" : "slate"}>{item.status}</Pill><span className="text-sm font-semibold text-slate-900">{item.value}</span></div></div></div>)}
       </div>
     </div>
   );
@@ -540,7 +679,266 @@ export function AdminPage() {
   );
 }
 
-export function ProfileModal({ developer, onClose }) {
+export function ShortlistReviewModal({ developers: shortlistedDevelopers, notes, onClose, onToggleShortlist, onUpdateNote, onRequestBooking }) {
+  if (!shortlistedDevelopers.length) return null;
+
+  const averageRate = Math.round(shortlistedDevelopers.reduce((total, developer) => total + developer.rate, 0) / shortlistedDevelopers.length);
+
+  return (
+    <AnimatePresence>
+      <>
+        <motion.div className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-[1px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-start justify-center p-3 pt-6 sm:p-6">
+          <motion.div className="pointer-events-auto max-h-full w-full max-w-6xl overflow-y-auto rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-7" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.98 }} transition={{ duration: 0.18 }}>
+            <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Shortlist review</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Saved for later outreach or booking</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Treat this like a cart. Compare candidates, keep message notes, and spin any developer into a booking request when the timing is right.</p>
+              </div>
+              <button type="button" onClick={onClose} className={cn(iconButtonClass, "self-end sm:self-start")}><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="space-y-4">
+                {shortlistedDevelopers.map((developer) => (
+                  <div key={developer.id} className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
+                          <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
+                          <Pill>{developer.seniority}</Pill>
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">{developer.summary}</p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {developer.skills.slice(0, 4).map((skill) => <Pill key={skill}>{skill}</Pill>)}
+                        </div>
+                      </div>
+                      <div className="shrink-0 rounded-[24px] border border-slate-200 bg-white p-4 lg:w-[220px]">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Day rate</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{formatCurrency(developer.rate)}</p>
+                        <p className="mt-1 text-sm text-slate-500">{developer.bookingType}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor={`shortlist-note-${developer.id}`}>Message prep</label>
+                        <textarea id={`shortlist-note-${developer.id}`} value={notes[developer.id] || ""} onChange={(e) => onUpdateNote(developer.id, e.target.value)} placeholder="Save context for later outreach: project angle, concerns, who should speak to them, or why they made the shortlist." className="mt-3 min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <button type="button" onClick={() => onRequestBooking(developer)} className={cn(primaryButtonClass, "w-full rounded-full px-4 py-3")}>
+                          Request booking
+                        </button>
+                        <button type="button" onClick={() => onToggleShortlist(developer.id)} className={cn(secondaryButtonClass, "w-full rounded-full px-4 py-3")}>
+                          Remove from shortlist
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] xl:sticky xl:top-24">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Summary</p>
+                <div className="mt-5 space-y-4">
+                  <div className="rounded-[24px] bg-slate-950 p-4 text-white">
+                    <p className="text-sm font-semibold">{shortlistedDevelopers.length} developers saved</p>
+                    <p className="mt-2 text-sm text-white/72">Average rate {formatCurrency(averageRate)}. Use the notes field to keep outreach context with the shortlist.</p>
+                  </div>
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Recommended next step</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Keep the shortlist narrow, add the message angle for each developer, then move only the strongest fit into a booking request.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </>
+    </AnimatePresence>
+  );
+}
+
+export function BookingFlowModal({ developer, prompt, onClose, onSubmit }) {
+  const [form, setForm] = useState({
+    clientName: "New client",
+    engagementType: "Sprint",
+    startDate: relativeDateValue(7),
+    endDate: relativeDateValue(35),
+    daysPerWeek: 4,
+    kickoff: "Flexible within window",
+    budgetCap: developer?.rate ?? 650,
+    goals: prompt || "",
+    notes: ""
+  });
+
+  useEffect(() => {
+    if (!developer) return;
+    setForm({
+      clientName: "New client",
+      engagementType: "Sprint",
+      startDate: relativeDateValue(7),
+      endDate: relativeDateValue(35),
+      daysPerWeek: 4,
+      kickoff: "Flexible within window",
+      budgetCap: developer.rate,
+      goals: prompt || "",
+      notes: ""
+    });
+  }, [developer, prompt]);
+
+  if (!developer) return null;
+
+  const estimatedDays = estimateBookingDays(form.startDate, form.endDate, form.daysPerWeek);
+  const estimatedValue = estimatedDays * developer.rate;
+
+  const handleChange = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const handleSubmit = () => {
+    onSubmit({
+      id: `request-${Date.now()}`,
+      client: form.clientName,
+      developer: developer.name,
+      developerId: developer.id,
+      stack: developer.skills.slice(0, 2).join(" + "),
+      dates: formatDateWindow(form.startDate, form.endDate),
+      status: "Requested",
+      value: estimatedValue ? formatCurrency(estimatedValue) : `${formatCurrency(developer.rate)} / day`,
+      engagementType: form.engagementType,
+      goals: form.goals,
+      notes: form.notes,
+      daysPerWeek: form.daysPerWeek
+    });
+  };
+
+  return (
+    <AnimatePresence>
+      <>
+        <motion.div className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-[1px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-start justify-center p-3 pt-6 sm:p-6">
+          <motion.div className="pointer-events-auto max-h-full w-full max-w-5xl overflow-y-auto rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:p-7" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 14, scale: 0.98 }} transition={{ duration: 0.18 }}>
+            <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Booking request</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Build the booking around real dates and scope</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">This is the handoff step from shortlist to ops. Set the window, weekly commitment, and delivery goals so the request has enough shape to schedule properly.</p>
+              </div>
+              <button type="button" onClick={onClose} className={cn(iconButtonClass, "self-end sm:self-start")}><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="space-y-5">
+                <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="flex flex-wrap gap-2">
+                        <Pill tone={developer.availability.includes("Booked") ? "slate" : "green"}>{developer.availability}</Pill>
+                        <Pill>{developer.seniority}</Pill>
+                      </div>
+                      <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">{developer.name}</h3>
+                      <p className="mt-2 text-sm font-medium text-slate-600">{developer.role}</p>
+                    </div>
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">Rate</p>
+                      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{formatCurrency(developer.rate)}</p>
+                      <p className="mt-1 text-sm text-slate-500">{developer.bookingType}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="client-name">Client</label>
+                    <input id="client-name" value={form.clientName} onChange={(e) => handleChange("clientName", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="engagement-type">Engagement</label>
+                    <select id="engagement-type" value={form.engagementType} onChange={(e) => handleChange("engagementType", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
+                      <option>Sprint</option>
+                      <option>Trial</option>
+                      <option>Fractional</option>
+                      <option>Retained</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="start-date">Start date</label>
+                    <input id="start-date" type="date" value={form.startDate} onChange={(e) => handleChange("startDate", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="end-date">End date</label>
+                    <input id="end-date" type="date" value={form.endDate} onChange={(e) => handleChange("endDate", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="days-per-week">Days per week</label>
+                    <select id="days-per-week" value={form.daysPerWeek} onChange={(e) => handleChange("daysPerWeek", Number(e.target.value))} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
+                      <option value={1}>1 day</option>
+                      <option value={2}>2 days</option>
+                      <option value={3}>3 days</option>
+                      <option value={4}>4 days</option>
+                      <option value={5}>5 days</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="kickoff-window">Kickoff preference</label>
+                    <select id="kickoff-window" value={form.kickoff} onChange={(e) => handleChange("kickoff", e.target.value)} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400">
+                      <option>Flexible within window</option>
+                      <option>Start on selected date</option>
+                      <option>Need confirmation this week</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="budget-cap">Budget cap per day</label>
+                  <input id="budget-cap" type="number" min="300" step="10" value={form.budgetCap} onChange={(e) => handleChange("budgetCap", Number(e.target.value))} className="mt-3 h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400" />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="booking-goals">Delivery goals</label>
+                  <textarea id="booking-goals" value={form.goals} onChange={(e) => handleChange("goals", e.target.value)} className="mt-3 min-h-[140px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition focus:border-slate-400" />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500" htmlFor="booking-notes">Ops notes</label>
+                  <textarea id="booking-notes" value={form.notes} onChange={(e) => handleChange("notes", e.target.value)} placeholder="Dependencies, onboarding constraints, interview steps, or anything ops should know before confirming." className="mt-3 min-h-[120px] w-full rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400" />
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 xl:sticky xl:top-24">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Request summary</p>
+                <div className="mt-5 rounded-[24px] bg-slate-950 p-4 text-white">
+                  <p className="text-sm font-semibold">{form.engagementType} booking for {developer.name}</p>
+                  <p className="mt-2 text-sm text-white/72">{formatDateWindow(form.startDate, form.endDate)} · {form.daysPerWeek} days per week</p>
+                </div>
+                <div className="mt-5 space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between gap-4"><span>Estimated days</span><span className="font-semibold text-slate-900">{estimatedDays || "TBC"}</span></div>
+                  <div className="flex items-center justify-between gap-4"><span>Estimated value</span><span className="font-semibold text-slate-900">{estimatedValue ? formatCurrency(estimatedValue) : "TBC"}</span></div>
+                  <div className="flex items-center justify-between gap-4"><span>Budget cap</span><span className="font-semibold text-slate-900">{formatCurrency(form.budgetCap || 0)}</span></div>
+                </div>
+                <button type="button" onClick={handleSubmit} className={cn(primaryButtonClass, "mt-6 w-full rounded-full px-4 py-3")}>
+                  Send booking request
+                </button>
+                <button type="button" onClick={onClose} className={cn(secondaryButtonClass, "mt-3 w-full rounded-full px-4 py-3")}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </>
+    </AnimatePresence>
+  );
+}
+
+export function ProfileModal({ developer, onClose, isShortlisted = false, onToggleShortlist, onRequestBooking }) {
   if (!developer) return null;
   return (
     <AnimatePresence>
@@ -575,8 +973,8 @@ export function ProfileModal({ developer, onClose }) {
                   <div className="flex items-center justify-between gap-4"><span>Experience</span><span className="font-semibold text-slate-900">{developer.years} years</span></div>
                   <div className="flex items-center justify-between gap-4"><span>Availability</span><span className="text-right font-semibold text-slate-900">{developer.availability}</span></div>
                 </div>
-                <button type="button" className={cn(primaryButtonClass, "mt-6 w-full px-5 py-3")}>Request booking</button>
-                <button type="button" className={cn(secondaryButtonClass, "mt-3 w-full px-5 py-3")}>Shortlist developer</button>
+                <button type="button" onClick={() => onRequestBooking?.(developer)} className={cn(primaryButtonClass, "mt-6 w-full px-5 py-3")}>Request booking</button>
+                <button type="button" onClick={() => onToggleShortlist?.(developer.id)} className={cn(isShortlisted ? primaryButtonClass : secondaryButtonClass, "mt-3 w-full px-5 py-3")}>{isShortlisted ? "Shortlisted" : "Shortlist developer"}</button>
               </div>
             </div>
           </motion.div>
