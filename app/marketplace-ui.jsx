@@ -18,7 +18,6 @@ import {
   SlidersHorizontal,
   Star,
   Users,
-  Wallet,
   X,
 } from "lucide-react";
 
@@ -286,6 +285,15 @@ function PromptIdeaCard({ label, description, prompt, onSelect }) {
   );
 }
 
+function HeroMetric({ label, value }) {
+  return (
+    <div className="rounded-[28px] border border-white/80 bg-white/76 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] backdrop-blur sm:p-5">
+      <p className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-[2rem]">{value}</p>
+      <p className="mt-2 text-sm font-medium text-slate-600">{label}</p>
+    </div>
+  );
+}
+
 function AIPromptHero({ prompt, setPrompt, onSubmit, compact = false }) {
   const promptWordCount = prompt.trim() ? prompt.trim().split(/\s+/).length : 0;
   const leadPoints = [
@@ -293,29 +301,41 @@ function AIPromptHero({ prompt, setPrompt, onSubmit, compact = false }) {
     { label: "Live structure", value: "Stack, budget, and timing become usable signals while the brief is still being written." },
     { label: "Sharper matching", value: "Shortlists start ranked before the client ever touches the refinement layer." }
   ];
+  const heroMetrics = [
+    { label: "Developer pool", value: "1,000+" },
+    { label: "Average fill time", value: "48h" },
+    { label: "Bookings managed", value: "2.4k" },
+    { label: "Platform margin", value: "18%" }
+  ];
 
   return (
     <section className={cn("relative overflow-hidden rounded-[36px] border border-white/80 bg-[linear-gradient(135deg,#fbfaf5_0%,#f6f0e7_38%,#edf2eb_100%)] shadow-[0_20px_70px_rgba(15,23,42,0.08)]", compact ? "p-5 sm:p-6 xl:p-7" : "p-6 sm:p-8 xl:p-10")}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.18),transparent_42%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_32%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.08),transparent_30%)]" />
       <div className="relative">
-        <div>
-          <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/72 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.18)]" />
-            Live brief composer
-          </div>
-          <h1 className={cn("max-w-4xl font-[family:var(--font-sora)] font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950", compact ? "mt-5 text-4xl sm:text-[3.6rem] xl:text-[4.4rem]" : "mt-6 text-4xl sm:text-5xl xl:text-[5.1rem]")}>
-            Write the brief once. Get a sharper shortlist back.
-          </h1>
-          <p className={cn("max-w-2xl text-slate-600", compact ? "mt-4 text-base leading-7" : "mt-6 text-lg leading-8")}>
-            Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
-          </p>
-          <div className={cn("grid gap-4 sm:grid-cols-3", compact ? "mt-6 xl:mt-5" : "mt-8")}>
-            {leadPoints.map((item) => (
-              <div key={item.label} className={cn("border-l border-slate-300/70 pl-4", compact ? "lg:hidden 2xl:block" : "")}>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
+        <div className={cn("grid items-start gap-6", compact ? "xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] xl:gap-8" : "xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] xl:gap-10")}>
+          <div>
+            <h1 className={cn("max-w-4xl font-[family:var(--font-sora)] font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950", compact ? "text-4xl sm:text-[3.5rem] xl:text-[4.2rem]" : "text-4xl sm:text-5xl xl:text-[5.1rem]")}>
+              Write the brief once. Get a sharper shortlist back.
+            </h1>
+            <p className={cn("max-w-2xl text-slate-600", compact ? "mt-4 text-base leading-7" : "mt-6 text-lg leading-8")}>
+              Drop a real project outline, not a grid of filters. The platform interprets stack, budget, and timing in one pass, then returns the developers most likely to fit.
+            </p>
+            {!compact ? (
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                {leadPoints.map((item) => (
+                  <div key={item.label} className="border-l border-slate-300/70 pl-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-700">{item.value}</p>
+                  </div>
+                ))}
               </div>
+            ) : null}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:self-center">
+            {heroMetrics.map((item) => (
+              <HeroMetric key={item.label} label={item.label} value={item.value} />
             ))}
           </div>
         </div>
@@ -417,14 +437,8 @@ function ResultsFilterSidebar({ parsed, filters, setFilters, resultCount }) {
 
 export function MarketplaceLanding({ prompt, setPrompt, onGenerate }) {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 lg:gap-5">
+    <div className="flex h-full min-h-0 flex-col">
       <AIPromptHero prompt={prompt} setPrompt={setPrompt} onSubmit={onGenerate} compact />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Developer pool" value="1,000+" hint="Frontend, backend, mobile, AI, DevOps" icon={Users} compact />
-        <StatCard label="Average fill time" value="48h" hint="For common stacks and shortlists" icon={Clock3} compact />
-        <StatCard label="Bookings managed" value="2.4k" hint="Across trial, project, and retained work" icon={CalendarDays} compact />
-        <StatCard label="Platform margin" value="18%" hint="Placeholder admin margin control" icon={Wallet} compact />
-      </div>
     </div>
   );
 }
